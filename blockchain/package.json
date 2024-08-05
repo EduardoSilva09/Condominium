@@ -1,0 +1,32 @@
+{
+  "name": "blockchain",
+  "description": "",
+  "version": "1.0.0",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "npx hardhat test"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "hardhat": "^2.22.7"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/EduardoSilva09/Condominium.git"
+  },
+  "keywords": [
+    "Solidity",
+    "Blockchain",
+    "Hardhat",
+    "Web3"
+  ],
+  "author": "Eduardo Silva Feitosa",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/EduardoSilva09/Condominium/issues"
+  },
+  "homepage": "https://github.com/EduardoSilva09/Condominium#readme"
+}
