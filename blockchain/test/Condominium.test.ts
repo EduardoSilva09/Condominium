@@ -5,6 +5,20 @@ import { expect } from "chai";
 import hre from "hardhat";
 
 describe("Condominium", function () {
+  enum Options {
+    EMPTY,
+    YES,
+    NO,
+    ABSTENTION
+  }
+
+  enum Status {
+    IDLE,
+    VOTING,
+    APPROVED,
+    DENIED
+  }
+
   async function deployFixture() {
     const [manager, resident] = await hre.ethers.getSigners();
 
@@ -163,11 +177,151 @@ describe("Condominium", function () {
   it("Should NOT remove topic (status)", async function () {
     const { contract, manager, resident } = await loadFixture(deployFixture);
     await contract.addTopic("Topico", "Topico de testes");
-
-    // todo: change topic status
+    await contract.openVoting("Topico");
 
     await expect(contract.removeTopic("Topico"))
       .to.be.revertedWith("Only IDLE topics can be removed");
   });
 
+  it("Should vote ", async function () {
+    const { contract, manager, resident } = await loadFixture(deployFixture);
+
+    await contract.addResident(resident.address, 2102);
+    await contract.addTopic("Topico", "Topico de testes");
+    await contract.openVoting("Topico");
+
+    const instance = contract.connect(resident);
+    await instance.vote("Topico", Options.YES);
+
+    expect(await instance.numberOfVotes("Topico")).to.equal(1);
+  });
+
+  it("Should NOT vote (duplicated) ", async function () {
+    const { contract, manager, resident } = await loadFixture(deployFixture);
+
+    await contract.addResident(resident.address, 2102);
+    await contract.addTopic("Topico", "Topico de testes");
+    await contract.openVoting("Topico");
+
+    const instance = contract.connect(resident);
+    await instance.vote("Topico", Options.YES);
+    await expect(instance.vote("Topico", Options.YES))
+      .to.be.revertedWith("A residence should vote only once");
+    expect(await instance.numberOfVotes("Topico")).to.equal(1);
+  });
+
+  it("Should NOT vote (empty vote) ", async function () {
+    const { contract, manager, resident } = await loadFixture(deployFixture);
+
+    await contract.addResident(resident.address, 2102);
+    await contract.addTopic("Topico", "Topico de testes");
+    await contract.openVoting("Topico");
+
+    const instance = contract.connect(resident);
+    await expect(instance.vote("Topico", Options.EMPTY))
+      .to.be.revertedWith("The option cannot be EMPTY");
+  });
+
+  it("Should NOT vote (invalid topic) ", async function () {
+    const { contract, manager, resident } = await loadFixture(deployFixture);
+    const instance = contract.connect(resident);
+    await contract.addResident(resident.address, 2102);
+
+    await expect(instance.vote("Topico", Options.YES))
+      .to.be.revertedWith("The topic does not exists");
+  });
+
+  it("Should NOT vote (status) ", async function () {
+    const { contract, manager, resident } = await loadFixture(deployFixture);
+    await contract.addResident(resident.address, 2102);
+    await contract.addTopic("Topico", "Topico de testes");
+    const instance = contract.connect(resident);
+
+    await expect(instance.vote("Topico", Options.YES))
+      .to.be.revertedWith("Only VOTING topics can be voted");
+  });
+
+  it("Should NOT vote (permission) ", async function () {
+    const { contract, manager, resident } = await loadFixture(deployFixture);
+    await contract.addTopic("Topico", "Topico de testes");
+    const instance = contract.connect(resident);
+
+    await expect(instance.vote("Topico", Options.YES))
+      .to.be.revertedWith("Only the manager or the residents can do this");
+  });
+
+  it("Should close voting ", async function () {
+    const { contract, manager, resident } = await loadFixture(deployFixture);
+
+    await contract.addResident(resident.address, 2102);
+    await contract.addTopic("Topico", "Topico de testes");
+    await contract.openVoting("Topico");
+    await contract.vote("Topico", Options.YES);
+
+    const instance = contract.connect(resident);
+    await instance.vote("Topico", Options.YES);
+    await contract.closeVoting("Topico");
+    const topic = await contract.getTopic("Topico");
+
+    expect(topic.status).to.equal(Status.APPROVED);
+  });
+
+  it("Should NOT close voting (permission)", async function () {
+    const { contract, manager, resident } = await loadFixture(deployFixture);
+
+    await contract.addResident(resident.address, 2102);
+    await contract.addTopic("Topico", "Topico de testes");
+    await contract.openVoting("Topico");
+
+    const instance = contract.connect(resident);
+    await instance.vote("Topico", Options.YES);
+    await expect(instance.closeVoting("Topico"))
+      .to.be.revertedWith("Only the manager can do this");
+
+    const topic = await contract.getTopic("Topico");
+    expect(topic.status).to.equal(Status.VOTING);
+  });
+
+  it("Should NOT close voting (status)", async function () {
+    const { contract, manager, resident } = await loadFixture(deployFixture);
+
+    await contract.addTopic("Topico", "Topico de testes");
+
+    await expect(contract.closeVoting("Topico"))
+      .to.be.revertedWith("Only VOTING topics can be closed");
+
+    const topic = await contract.getTopic("Topico");
+    expect(topic.status).to.equal(Status.IDLE);
+  });
+
+  it("Should NOT close voting (invalid topic)", async function () {
+    const { contract, manager, resident } = await loadFixture(deployFixture);
+    await expect(contract.closeVoting("Topico"))
+      .to.be.revertedWith("The topic does not exists");
+
+    const topic = await contract.getTopic("Topico");
+    expect(topic.status).to.equal(Status.IDLE);
+  });
+
+  it("Should open voting", async function () {
+    const { contract, manager, resident } = await loadFixture(deployFixture);
+
+    await contract.addTopic("Topico", "Topico de testes");
+    await contract.openVoting("Topico");
+
+    const topic = await contract.getTopic("Topico");
+    expect(topic.status).to.equal(Status.VOTING);
+  });
+
+  it("Should NOT open voting (permission)", async function () {
+    const { contract, manager, resident } = await loadFixture(deployFixture);
+
+    await contract.addTopic("Topico", "Topico de testes");
+    const instance = contract.connect(resident);
+    await expect(instance.openVoting("Topico"))
+      .to.be.revertedWith("Only the manager can do this");
+
+    const topic = await contract.getTopic("Topico");
+    expect(topic.status).to.equal(Status.IDLE);
+  });
 });
