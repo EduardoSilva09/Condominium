@@ -1,43 +1,23 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-contract Condominium {
+import "./ICondominium.sol";
+import "./CondominiumLib.sol";
+
+contract Condominium is ICondominium {
     address public manager; //Ownable
     mapping(uint16 => bool) public residences;
     mapping(address => uint16) public residents;
     mapping(address => bool) public counselors;
 
-    enum Status {
-        IDLE,
-        VOTING,
-        APPROVED,
-        DENIED
-    }
-
-    enum Options {
-        EMPTY,
-        YES,
-        NO,
-        ABSTENTION
-    }
-
-    struct Topic {
-        string title;
-        string description;
-        Status status;
-        uint256 createdDate;
-        uint256 startDate;
-        uint256 endDate;
-    }
-
     struct Vote {
         address resident;
         uint16 residence;
-        Options option;
+        CondominiumLib.Options option;
         uint256 timestamp;
     }
 
-    mapping(bytes32 => Topic) public topics;
+    mapping(bytes32 => CondominiumLib.Topic) public topics;
     mapping(bytes32 => Vote[]) public votings;
 
     constructor() {
@@ -115,7 +95,9 @@ contract Condominium {
         manager = newManager;
     }
 
-    function getTopic(string memory title) public view returns (Topic memory) {
+    function getTopic(
+        string memory title
+    ) public view returns (CondominiumLib.Topic memory) {
         bytes32 topicId = keccak256(bytes(title));
         return topics[topicId];
     }
@@ -130,10 +112,10 @@ contract Condominium {
     ) external onlyResidents {
         require(!topicExists(title), "This topic already exists");
 
-        Topic memory newTopic = Topic({
+        CondominiumLib.Topic memory newTopic = CondominiumLib.Topic({
             title: title,
             description: description,
-            status: Status.IDLE,
+            status: CondominiumLib.Status.IDLE,
             createdDate: block.timestamp,
             startDate: 0,
             endDate: 0
@@ -143,32 +125,41 @@ contract Condominium {
     }
 
     function removeTopic(string memory title) external onlyManager {
-        Topic memory topic = getTopic(title);
+        CondominiumLib.Topic memory topic = getTopic(title);
         require(topic.createdDate > 0, "The topic does not exists");
-        require(topic.status == Status.IDLE, "Only IDLE topics can be removed");
+        require(
+            topic.status == CondominiumLib.Status.IDLE,
+            "Only IDLE topics can be removed"
+        );
         delete topics[keccak256(bytes(title))];
     }
 
     function openVoting(string memory title) external onlyManager {
-        Topic memory topic = getTopic(title);
+        CondominiumLib.Topic memory topic = getTopic(title);
         require(topic.createdDate > 0, "The topic does not exists");
         require(
-            topic.status == Status.IDLE,
+            topic.status == CondominiumLib.Status.IDLE,
             "Only IDLE topics can be open for voting"
         );
 
         bytes32 topicId = keccak256(bytes(title));
-        topics[topicId].status = Status.VOTING;
+        topics[topicId].status = CondominiumLib.Status.VOTING;
         topics[topicId].startDate = block.timestamp;
     }
 
-    function vote(string memory title, Options option) external onlyResidents {
-        require(option != Options.EMPTY, "The option cannot be EMPTY");
+    function vote(
+        string memory title,
+        CondominiumLib.Options option
+    ) external onlyResidents {
+        require(
+            option != CondominiumLib.Options.EMPTY,
+            "The option cannot be EMPTY"
+        );
 
-        Topic memory topic = getTopic(title);
+        CondominiumLib.Topic memory topic = getTopic(title);
         require(topic.createdDate > 0, "The topic does not exists");
         require(
-            topic.status == Status.VOTING,
+            topic.status == CondominiumLib.Status.VOTING,
             "Only VOTING topics can be voted"
         );
         uint16 residence = residents[msg.sender];
@@ -191,10 +182,10 @@ contract Condominium {
     }
 
     function closeVoting(string memory title) external onlyManager {
-        Topic memory topic = getTopic(title);
+        CondominiumLib.Topic memory topic = getTopic(title);
         require(topic.createdDate > 0, "The topic does not exists");
         require(
-            topic.status == Status.VOTING,
+            topic.status == CondominiumLib.Status.VOTING,
             "Only VOTING topics can be closed"
         );
 
@@ -204,17 +195,18 @@ contract Condominium {
         bytes32 topicId = keccak256(bytes(title));
         Vote[] memory votes = votings[topicId];
         for (uint8 i = 0; i < votes.length; i++) {
-            if (votes[i].option == Options.YES) {
+            if (votes[i].option == CondominiumLib.Options.YES) {
                 approved++;
-            } else if (votes[i].option == Options.NO) {
+            } else if (votes[i].option == CondominiumLib.Options.NO) {
                 denied++;
             } else {
                 abstenctions++;
             }
         }
 
-        if (approved > denied) topics[topicId].status = Status.APPROVED;
-        else topics[topicId].status = Status.DENIED;
+        if (approved > denied)
+            topics[topicId].status = CondominiumLib.Status.APPROVED;
+        else topics[topicId].status = CondominiumLib.Status.DENIED;
 
         topics[topicId].endDate = block.timestamp;
     }
