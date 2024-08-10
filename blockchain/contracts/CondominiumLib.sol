@@ -22,4 +22,10 @@ library CondominiumLib {
         uint256 startDate;
         uint256 endDate;
     }
+    struct Vote {
+        address resident;
+        uint16 residence;
+        Options option;
+        uint256 timestamp;
+    }
 }
