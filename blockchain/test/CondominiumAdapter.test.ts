@@ -3,6 +3,8 @@ import {
 } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
 import hre from "hardhat";
+import { CondominiumAdapter } from "../typechain-types";
+import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
 
 describe("CondominiumAdapter", function () {
   enum Options {
@@ -17,6 +19,13 @@ describe("CondominiumAdapter", function () {
     VOTING,
     APPROVED,
     DENIED
+  }
+
+  enum Category {
+    DECISION,
+    SPENT,
+    CHANGE_QUOTA,
+    CHANGE_MANAGER
   }
 
   async function deployAdapterFixture() {
@@ -34,6 +43,26 @@ describe("CondominiumAdapter", function () {
     const contract = await Condominium.deploy();
 
     return { contract };
+  }
+
+  function getResidenceId(i: number) {
+    const blocks = (1000 * Math.ceil(i / 25));
+    const floors = (100 * Math.ceil(i / 5));
+    const units = (i - (5 * Math.floor((i - 1) / 5)));
+    return blocks + floors + units;
+  }
+
+  async function addResidents(adapter: CondominiumAdapter, count: number, accounts: SignerWithAddress[]) {
+    for (let i = 1; i <= count; i++) {
+      await adapter.addResident(accounts[i - 1].address, getResidenceId(i));
+    }
+  }
+
+  async function addVotes(adapter: CondominiumAdapter, count: number, accounts: SignerWithAddress[]) {
+    for (let i = 1; i <= count; i++) {
+      const instance = adapter.connect(accounts[i - 1])
+      await instance.vote("topic", Options.YES);
+    }
   }
 
   it("Should upgrade", async function () {
@@ -103,7 +132,7 @@ describe("CondominiumAdapter", function () {
     const { contract } = await loadFixture(deployImplementationFixture);
 
     await adapter.upgrade(await contract.getAddress());
-    await adapter.addTopic("topic", "description topic teste");
+    await adapter.addTopic("topic", "description topic teste", Category.DECISION, 0, manager.address);
 
     expect(await contract.topicExists("topic")).to.equal(true);
   });
@@ -113,7 +142,7 @@ describe("CondominiumAdapter", function () {
     const { contract } = await loadFixture(deployImplementationFixture);
 
     await adapter.upgrade(await contract.getAddress());
-    await adapter.addTopic("topic", "description topic teste")
+    await adapter.addTopic("topic", "description topic teste", Category.DECISION, 0, manager.address)
     await adapter.removeTopic("topic")
 
     expect(await contract.topicExists("topic")).to.equal(false);
@@ -124,7 +153,7 @@ describe("CondominiumAdapter", function () {
     const { contract } = await loadFixture(deployImplementationFixture);
 
     await adapter.upgrade(await contract.getAddress());
-    await adapter.addTopic("topic", "description topic teste")
+    await adapter.addTopic("topic", "description topic teste", Category.DECISION, 0, manager.address)
     await adapter.openVoting("topic");
     const topic = await contract.getTopic("topic");
 
@@ -137,7 +166,7 @@ describe("CondominiumAdapter", function () {
 
     await adapter.upgrade(await contract.getAddress());
     await adapter.addResident(accounts[1].address, 1301);
-    await adapter.addTopic("topic", "description topic teste")
+    await adapter.addTopic("topic", "description topic teste", Category.DECISION, 0, manager.address)
     await adapter.openVoting("topic");
     const instance = adapter.connect(accounts[1])
     await instance.vote("topic", Options.YES);
@@ -149,11 +178,11 @@ describe("CondominiumAdapter", function () {
     const { contract } = await loadFixture(deployImplementationFixture);
 
     await adapter.upgrade(await contract.getAddress());
-    await adapter.addResident(accounts[1].address, 1301);
-    await adapter.addTopic("topic", "description topic teste")
+    await addResidents(adapter, 5, accounts);
+
+    await adapter.addTopic("topic", "description topic teste", Category.DECISION, 0, manager.address)
     await adapter.openVoting("topic");
-    const instance = adapter.connect(accounts[1])
-    await instance.vote("topic", Options.YES);
+    await addVotes(adapter, 5, accounts);
     await adapter.closeVoting("topic");
 
     const topic = await contract.getTopic("topic");

@@ -31,8 +31,21 @@ contract CondominiumAdapter {
         return implementation.setCouncelor(resident, isEntering);
     }
 
-    function addTopic(string memory title, string memory description) external {
-        return implementation.addTopic(title, description);
+    function addTopic(
+        string memory title,
+        string memory description,
+        Lib.Category category,
+        uint amount,
+        address responsible
+    ) external {
+        return
+            implementation.addTopic(
+                title,
+                description,
+                category,
+                amount,
+                responsible
+            );
     }
 
     function removeTopic(string memory title) external {
@@ -43,7 +56,7 @@ contract CondominiumAdapter {
         return implementation.openVoting(title);
     }
 
-    function vote(string memory title, CondominiumLib.Options option) external {
+    function vote(string memory title, Lib.Options option) external {
         return implementation.vote(title, option);
     }
 
