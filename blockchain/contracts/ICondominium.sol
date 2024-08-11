@@ -12,7 +12,13 @@ interface ICondominium {
         string memory description,
         Lib.Category category,
         uint amount,
-        address responsibles
+        address responsible
+    ) external;
+    function editTopic(
+        string memory topicToEdit,
+        string memory description,
+        uint amount,
+        address responsible
     ) external;
     function removeTopic(string memory title) external;
     function openVoting(string memory title) external;

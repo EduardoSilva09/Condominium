@@ -71,6 +71,12 @@ describe("Condominium", function () {
     expect(await contract.isResident(resident.address)).to.equal(true);
   });
 
+  it("Should NOT add residet (address)", async function () {
+    const { contract, manager, resident } = await loadFixture(deployFixture);
+    await expect(contract.addResident(ethers.ZeroAddress, 2102))
+      .to.be.revertedWith("Invalid address");
+  });
+
   it("Should NOT add residet (permission)", async function () {
     const { contract, manager, resident } = await loadFixture(deployFixture);
     const instance = contract.connect(resident);
@@ -113,6 +119,12 @@ describe("Condominium", function () {
 
     expect(await contract.counselors(resident.address)).to.equal(true);
     expect(await contract.isResident(accounts[2].address)).to.equal(true);
+  });
+
+  it("Should NOT set councelor (address)", async function () {
+    const { contract, manager, resident } = await loadFixture(deployFixture);
+    await expect(contract.setCouncelor(ethers.ZeroAddress, true))
+      .to.be.revertedWith("Invalid address");
   });
 
   it("Should remove councelor ", async function () {
@@ -208,6 +220,54 @@ describe("Condominium", function () {
     await contract.addTopic("Topico", "Topico de testes", Category.DECISION, 0, manager.address);
     await expect(contract.addTopic("Topico", "Topico de testes", Category.DECISION, 0, manager.address))
       .to.be.revertedWith("This topic already exists");
+  });
+
+  it("Should edit topic (manager)", async function () {
+    const { contract, manager, resident } = await loadFixture(deployFixture);
+    await contract.addTopic("Topico", "Topico de testes", Category.SPENT, 2, manager.address);
+    await contract.editTopic("Topico", "Topico atualizado", 4, manager.address);
+
+    const topic = await contract.getTopic("Topico");
+
+    expect(topic.description).to.equal("Topico atualizado");
+    expect(topic.amount).to.equal(4);
+  });
+
+  it("Should edit topic (nothing)", async function () {
+    const { contract, manager, resident } = await loadFixture(deployFixture);
+    await contract.addTopic("Topico", "Topico de testes", Category.SPENT, 2, manager.address);
+    await contract.editTopic("Topico", "", 0, ethers.ZeroAddress);
+
+    const topic = await contract.getTopic("Topico");
+
+    expect(topic.description).to.equal("Topico de testes");
+    expect(topic.amount).to.equal(2);
+    expect(topic.responsible).to.equal(manager.address);
+  });
+
+  it("Should NOT edit topic (permission)", async function () {
+    const { contract, manager, resident } = await loadFixture(deployFixture);
+    await contract.addTopic("Topico", "Topico de testes", Category.SPENT, 2, manager.address);
+    const instance = contract.connect(resident)
+
+    await expect(instance.editTopic("Topico", "Topico atualizado", 4, manager.address))
+      .to.be.revertedWith("Only the manager can do this");
+  });
+
+  it("Should NOT edit topic (status)", async function () {
+    const { contract, manager, resident } = await loadFixture(deployFixture);
+    await contract.addTopic("Topico", "Topico de testes", Category.SPENT, 2, manager.address);
+    await contract.openVoting("Topico");
+
+    await expect(contract.editTopic("Topico", "Topico atualizado", 4, manager.address))
+      .to.be.revertedWith("Only IDLE topics can be edited");
+  });
+
+  it("Should NOT edit topic (inexistent)", async function () {
+    const { contract, manager, resident } = await loadFixture(deployFixture);
+
+    await expect(contract.editTopic("Topico", "Topico atualizado", 4, manager.address))
+      .to.be.revertedWith("The topic does not exists");
   });
 
   it("Should remove topic ", async function () {

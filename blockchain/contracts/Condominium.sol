@@ -48,6 +48,11 @@ contract Condominium is ICondominium {
         _;
     }
 
+    modifier validAddress(address addr) {
+        require(addr != address(0), "Invalid address");
+        _;
+    }
+
     function residenceExists(uint16 residenceId) public view returns (bool) {
         return residences[residenceId];
     }
@@ -59,12 +64,14 @@ contract Condominium is ICondominium {
     function addResident(
         address resident,
         uint16 residenceId
-    ) external onlyCounselors {
+    ) external onlyCounselors validAddress(resident) {
         require(residenceExists(residenceId), "This residence does not exists");
         residents[resident] = residenceId;
     }
 
-    function removeResident(address resident) external onlyManager {
+    function removeResident(
+        address resident
+    ) external onlyManager validAddress(resident) {
         require(!counselors[resident], "A counceler cannot be removed");
         delete residents[resident];
     }
@@ -72,7 +79,7 @@ contract Condominium is ICondominium {
     function setCouncelor(
         address resident,
         bool isEntering
-    ) external onlyManager {
+    ) external onlyManager validAddress(resident) {
         if (isEntering) {
             require(isResident(resident), "The councelor must be a resident");
             counselors[resident] = true;
@@ -121,6 +128,26 @@ contract Condominium is ICondominium {
         });
 
         topics[keccak256(bytes(title))] = newTopic;
+    }
+
+    function editTopic(
+        string memory topicToEdit,
+        string memory description,
+        uint amount,
+        address responsible
+    ) external onlyManager {
+        Lib.Topic memory topic = getTopic(topicToEdit);
+        require(topic.createdDate > 0, "The topic does not exists");
+        require(
+            topic.status == Lib.Status.IDLE,
+            "Only IDLE topics can be edited"
+        );
+        bytes32 topicId = keccak256(bytes(topicToEdit));
+        if (bytes(description).length > 0)
+            topics[topicId].description = description;
+        if (amount > 0) topics[topicId].amount = amount;
+        if (responsible != address(0))
+            topics[topicId].responsible = responsible;
     }
 
     function removeTopic(string memory title) external onlyManager {
