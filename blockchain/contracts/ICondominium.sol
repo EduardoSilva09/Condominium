@@ -19,11 +19,22 @@ interface ICondominium {
         string memory description,
         uint amount,
         address responsible
-    ) external;
-    function removeTopic(string memory title) external;
-    function openVoting(string memory title) external;
+    ) external returns (Lib.TopicUpdate memory);
+    function removeTopic(
+        string memory title
+    ) external returns (Lib.TopicUpdate memory);
+    function openVoting(
+        string memory title
+    ) external returns (Lib.TopicUpdate memory);
     function vote(string memory title, Lib.Options option) external;
-    function closeVoting(string memory title) external;
+    function closeVoting(
+        string memory title
+    ) external returns (Lib.TopicUpdate memory);
     function payQuota(uint16 residenceId) external payable;
-    function transfer(string memory title, uint amount) external;
+    function transfer(
+        string memory title,
+        uint amount
+    ) external returns (Lib.TransferReceipt memory);
+    function getManager() external view returns (address);
+    function getQuota() external view returns (uint);
 }

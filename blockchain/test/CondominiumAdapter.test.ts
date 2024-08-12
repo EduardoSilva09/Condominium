@@ -19,6 +19,7 @@ describe("CondominiumAdapter", function () {
     VOTING,
     APPROVED,
     DENIED,
+    DELETED,
     SPENT
   }
 
@@ -62,10 +63,11 @@ describe("CondominiumAdapter", function () {
     }
   }
 
-  async function addVotes(adapter: CondominiumAdapter, count: number, accounts: SignerWithAddress[]) {
+  async function addVotes(adapter: CondominiumAdapter, count: number, accounts: SignerWithAddress[], shouldApprove: boolean = true) {
+    const option: Options = shouldApprove ? Options.YES : Options.NO;
     for (let i = 1; i <= count; i++) {
       const instance = adapter.connect(accounts[i - 1])
-      await instance.vote("topic", Options.YES);
+      await instance.vote("topic", option);
     }
   }
 
@@ -237,7 +239,7 @@ describe("CondominiumAdapter", function () {
       .to.be.revertedWith("You must upgrade first");
   });
 
-  it("Should close voting ", async function () {
+  it("Should close voting (DECISION APPROVED)", async function () {
     const { adapter, accounts, manager } = await loadFixture(deployAdapterFixture);
     const { contract } = await loadFixture(deployImplementationFixture);
 
@@ -247,11 +249,59 @@ describe("CondominiumAdapter", function () {
     await adapter.addTopic("topic", "description topic teste", Category.DECISION, 0, manager.address)
     await adapter.openVoting("topic");
     await addVotes(adapter, 5, accounts);
-    await adapter.closeVoting("topic");
+    await expect(adapter.closeVoting("topic"))
+      .to.emit(adapter, "TopicChanged");
 
     const topic = await contract.getTopic("topic");
-
     expect(topic.status).to.equal(Status.APPROVED);
+  });
+
+  it("Should close voting (DECISION DENIED)", async function () {
+    const { adapter, accounts, manager } = await loadFixture(deployAdapterFixture);
+    const { contract } = await loadFixture(deployImplementationFixture);
+
+    await adapter.upgrade(await contract.getAddress());
+    await addResidents(adapter, 5, accounts);
+
+    await adapter.addTopic("topic", "description topic teste", Category.DECISION, 0, manager.address)
+    await adapter.openVoting("topic");
+    await addVotes(adapter, 5, accounts, false);
+
+    await expect(adapter.closeVoting("topic"))
+      .to.emit(adapter, "TopicChanged");
+
+    const topic = await contract.getTopic("topic");
+    expect(topic.status).to.equal(Status.DENIED);
+  });
+
+  it("Should close voting (CHANGE_MANAGER)", async function () {
+    const { adapter, accounts, manager } = await loadFixture(deployAdapterFixture);
+    const { contract } = await loadFixture(deployImplementationFixture);
+
+    await adapter.upgrade(await contract.getAddress());
+    await addResidents(adapter, 15, accounts);
+
+    await adapter.addTopic("topic", "description topic teste", Category.CHANGE_MANAGER, 0, accounts[1].address)
+    await adapter.openVoting("topic");
+    await addVotes(adapter, 15, accounts);
+    await expect(adapter.closeVoting("topic"))
+      .to.emit(adapter, "ManagerChanged")
+      .withArgs(accounts[1].address);
+  });
+
+  it("Should close voting (CHANGE_QUOTA)", async function () {
+    const { adapter, accounts, manager } = await loadFixture(deployAdapterFixture);
+    const { contract } = await loadFixture(deployImplementationFixture);
+
+    await adapter.upgrade(await contract.getAddress());
+    await addResidents(adapter, 20, accounts);
+    const newValue = 100;
+    await adapter.addTopic("topic", "description topic teste", Category.CHANGE_QUOTA, newValue, manager.address)
+    await adapter.openVoting("topic");
+    await addVotes(adapter, 20, accounts);
+    await expect(adapter.closeVoting("topic"))
+      .to.emit(adapter, "QuotaChanged")
+      .withArgs(newValue);
   });
 
   it("Should NOT close voting (upgrade) ", async function () {
@@ -306,5 +356,6 @@ describe("CondominiumAdapter", function () {
     await expect(adapter.transfer("topic", ethers.parseEther("0.01")))
       .to.be.revertedWith("You must upgrade first");
   });
+
 
 });

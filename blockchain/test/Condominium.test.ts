@@ -19,6 +19,7 @@ describe("Condominium", function () {
     VOTING,
     APPROVED,
     DENIED,
+    DELETED,
     SPENT
   }
 
