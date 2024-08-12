@@ -25,4 +25,5 @@ interface ICondominium {
     function vote(string memory title, Lib.Options option) external;
     function closeVoting(string memory title) external;
     function payQuota(uint16 residenceId) external payable;
+    function transfer(string memory title, uint amount) external;
 }

@@ -260,4 +260,18 @@ describe("CondominiumAdapter", function () {
       .to.be.revertedWith("You must upgrade first");
   });
 
+  it("Should NOT pay quota (upgrade) ", async function () {
+    const { adapter, accounts, manager } = await loadFixture(deployAdapterFixture);
+
+    await expect(adapter.payQuota(1102, { value: ethers.parseEther("0.01") }))
+      .to.be.revertedWith("You must upgrade first");
+  });
+
+  it("Should NOT upgrade (address) ", async function () {
+    const { adapter, accounts, manager } = await loadFixture(deployAdapterFixture);
+
+    await expect(adapter.upgrade(ethers.ZeroAddress))
+      .to.be.revertedWith("Invalid address");
+  });
+
 });

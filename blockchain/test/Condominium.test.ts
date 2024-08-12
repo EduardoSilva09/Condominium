@@ -334,6 +334,18 @@ describe("Condominium", function () {
     expect(await instance.numberOfVotes("Topico")).to.equal(1);
   });
 
+  it("Should NOT vote (defaulter) ", async function () {
+    const { contract, manager, resident } = await loadFixture(deployFixture);
+
+    await contract.addResident(resident.address, 2102);
+    await contract.addTopic("Topico", "Topico de testes", Category.DECISION, 0, manager.address);
+    await contract.openVoting("Topico");
+
+    const instance = contract.connect(resident);
+    await expect(instance.vote("Topico", Options.YES))
+      .to.be.revertedWith("The resident must be defaulter");
+  });
+
   it("Should NOT vote (empty vote) ", async function () {
     const { contract, manager, resident } = await loadFixture(deployFixture);
 
@@ -481,5 +493,26 @@ describe("Condominium", function () {
 
     await expect(contract.openVoting("Topico"))
       .to.be.revertedWith("The topic does not exists");
+  });
+
+  it("Should NOT pay quota (residence)", async function () {
+    const { contract, manager, resident } = await loadFixture(deployFixture);
+
+    await expect(contract.payQuota(1, { value: ethers.parseEther("0.01") }))
+      .to.be.revertedWith("The residence does not exists");
+  });
+
+  it("Should NOT pay quota (value)", async function () {
+    const { contract, manager, resident } = await loadFixture(deployFixture);
+
+    await expect(contract.payQuota(2102, { value: ethers.parseEther("0.0001") }))
+      .to.be.revertedWith("Wrong value");
+  });
+
+  it("Should NOT pay quota (duplicated)", async function () {
+    const { contract, manager, resident } = await loadFixture(deployFixture);
+    await contract.payQuota(1102, { value: ethers.parseEther("0.01") })
+    await expect(contract.payQuota(1102, { value: ethers.parseEther("0.01") }))
+      .to.be.revertedWith("You cannot pay twice a month");
   });
 });
