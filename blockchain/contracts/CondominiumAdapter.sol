@@ -58,6 +58,7 @@ contract CondominiumAdapter {
                 responsible
             );
     }
+
     function editTopic(
         string memory topicToEdit,
         string memory description,
@@ -87,5 +88,9 @@ contract CondominiumAdapter {
 
     function closeVoting(string memory title) external upgraded {
         return implementation.closeVoting(title);
+    }
+
+    function payQuota(uint16 residenceId) external payable upgraded {
+        return implementation.payQuota{value: msg.value}(residenceId);
     }
 }

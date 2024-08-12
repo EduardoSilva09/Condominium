@@ -2,7 +2,7 @@ import {
   loadFixture,
 } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
-import hre from "hardhat";
+import hre, { ethers } from "hardhat";
 import { CondominiumAdapter } from "../typechain-types";
 import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
 
@@ -54,7 +54,10 @@ describe("CondominiumAdapter", function () {
 
   async function addResidents(adapter: CondominiumAdapter, count: number, accounts: SignerWithAddress[]) {
     for (let i = 1; i <= count; i++) {
-      await adapter.addResident(accounts[i - 1].address, getResidenceId(i));
+      const residenceId = getResidenceId(i);
+      await adapter.addResident(accounts[i - 1].address, residenceId);
+      const instance = adapter.connect(accounts[i - 1]);
+      await instance.payQuota(residenceId, { value: ethers.parseEther("0.01") });
     }
   }
 
@@ -220,6 +223,8 @@ describe("CondominiumAdapter", function () {
     await adapter.addTopic("topic", "description topic teste", Category.DECISION, 0, manager.address)
     await adapter.openVoting("topic");
     const instance = adapter.connect(accounts[1])
+    await instance.payQuota(1301, { value: ethers.parseEther("0.01") });
+
     await instance.vote("topic", Options.YES);
     expect(await contract.numberOfVotes("topic")).to.equal(1);
   });

@@ -48,7 +48,10 @@ describe("Condominium", function () {
 
   async function addResidents(contract: Condominium, count: number, accounts: SignerWithAddress[]) {
     for (let i = 1; i <= count; i++) {
-      await contract.addResident(accounts[i - 1].address, getResidenceId(i));
+      const residenceId = getResidenceId(i);
+      await contract.addResident(accounts[i - 1].address, residenceId);
+      const instance = contract.connect(accounts[i - 1]);
+      await instance.payQuota(residenceId, { value: ethers.parseEther("0.01") });
     }
   }
 
@@ -204,6 +207,8 @@ describe("Condominium", function () {
     const { contract, manager, resident } = await loadFixture(deployFixture);
     const instance = contract.connect(resident);
     await contract.addResident(resident.address, 2102);
+    await instance.payQuota(2102, { value: ethers.parseEther("0.01") });
+
     await instance.addTopic("Topico", "Topico de testes", Category.DECISION, 0, manager.address);
     expect(await instance.topicExists("Topico")).to.equal(true);
   });
@@ -308,6 +313,7 @@ describe("Condominium", function () {
     await contract.openVoting("Topico");
 
     const instance = contract.connect(resident);
+    await instance.payQuota(2102, { value: ethers.parseEther("0.01") });
     await instance.vote("Topico", Options.ABSTENTION);
 
     expect(await instance.numberOfVotes("Topico")).to.equal(1);
@@ -321,6 +327,7 @@ describe("Condominium", function () {
     await contract.openVoting("Topico");
 
     const instance = contract.connect(resident);
+    await instance.payQuota(2102, { value: ethers.parseEther("0.01") });
     await instance.vote("Topico", Options.YES);
     await expect(instance.vote("Topico", Options.YES))
       .to.be.revertedWith("A residence should vote only once");
@@ -335,6 +342,8 @@ describe("Condominium", function () {
     await contract.openVoting("Topico");
 
     const instance = contract.connect(resident);
+    await instance.payQuota(2102, { value: ethers.parseEther("0.01") });
+
     await expect(instance.vote("Topico", Options.EMPTY))
       .to.be.revertedWith("The option cannot be EMPTY");
   });
@@ -343,6 +352,7 @@ describe("Condominium", function () {
     const { contract, manager, resident } = await loadFixture(deployFixture);
     const instance = contract.connect(resident);
     await contract.addResident(resident.address, 2102);
+    await instance.payQuota(2102, { value: ethers.parseEther("0.01") });
 
     await expect(instance.vote("Topico", Options.YES))
       .to.be.revertedWith("The topic does not exists");
@@ -353,6 +363,7 @@ describe("Condominium", function () {
     await contract.addResident(resident.address, 2102);
     await contract.addTopic("Topico", "Topico de testes", Category.DECISION, 0, manager.address);
     const instance = contract.connect(resident);
+    await instance.payQuota(2102, { value: ethers.parseEther("0.01") });
 
     await expect(instance.vote("Topico", Options.YES))
       .to.be.revertedWith("Only VOTING topics can be voted");
@@ -400,6 +411,7 @@ describe("Condominium", function () {
     await contract.openVoting("Topico");
 
     const instance = contract.connect(resident);
+    await instance.payQuota(2102, { value: ethers.parseEther("0.01") });
     await instance.vote("Topico", Options.YES);
     await expect(instance.closeVoting("Topico"))
       .to.be.revertedWith("Only the manager can do this");
