@@ -285,7 +285,7 @@ contract Condominium is ICondominium {
         );
         require(
             topic.amount >= amount,
-            "The amount must be less or equals the APPROVED topic."
+            "The amount must be less or equals the APPROVED topic"
         );
 
         payable(topic.responsible).transfer(amount);

@@ -18,7 +18,8 @@ describe("CondominiumAdapter", function () {
     IDLE,
     VOTING,
     APPROVED,
-    DENIED
+    DENIED,
+    SPENT
   }
 
   enum Category {
@@ -272,6 +273,38 @@ describe("CondominiumAdapter", function () {
 
     await expect(adapter.upgrade(ethers.ZeroAddress))
       .to.be.revertedWith("Invalid address");
+  });
+
+  it("Should transfer ", async function () {
+    const { adapter, accounts, manager } = await loadFixture(deployAdapterFixture);
+    const { contract } = await loadFixture(deployImplementationFixture);
+
+    await adapter.upgrade(await contract.getAddress());
+    await addResidents(adapter, 10, accounts);
+
+    const value = ethers.parseEther("0.01");
+    await adapter.addTopic("topic", "description topic teste", Category.SPENT, value, accounts[1].address)
+    await adapter.openVoting("topic");
+    await addVotes(adapter, 10, accounts);
+    await adapter.closeVoting("topic");
+    const balanceBefore = await ethers.provider.getBalance(await contract.getAddress());
+    const balanceWorkerBefore = await ethers.provider.getBalance(accounts[1].address);
+    await adapter.transfer("topic", value);
+    const balanceWorkerAfter = await ethers.provider.getBalance(accounts[1].address);
+    const balanceAfter = await ethers.provider.getBalance(await contract.getAddress());
+
+    const topic = await contract.getTopic("topic");
+
+    expect(balanceAfter).to.equal(balanceBefore - value);
+    expect(balanceWorkerAfter).to.equal(balanceWorkerBefore + value);
+    expect(topic.status).to.equal(Status.SPENT);
+  });
+
+  it("Should NOT transfer (amount) ", async function () {
+    const { adapter, accounts, manager } = await loadFixture(deployAdapterFixture);
+
+    await expect(adapter.transfer("topic", ethers.parseEther("0.01")))
+      .to.be.revertedWith("You must upgrade first");
   });
 
 });
