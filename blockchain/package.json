@@ -7,7 +7,11 @@
     "test": "test"
   },
   "scripts": {
-    "test": "npx hardhat test"
+    "test": "npx hardhat test",
+    "start": "npx hardhat node",
+    "deploy:local": "npx hardhat run scripts/Deploy.ts --network local",
+    "deploy:bsctest": "npx hardhat run scripts/Deploy.ts --network bsctest",
+    "ignition": "npx hardhat ignition deploy ignition/modules/Condominium.ts --network bsctest"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
