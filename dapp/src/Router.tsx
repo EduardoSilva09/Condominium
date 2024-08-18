@@ -1,6 +1,8 @@
 import { Route, BrowserRouter, Routes, Navigate } from 'react-router-dom'
 import Login from './pages/Login';
 import Topics from './pages/Topics';
+import Transfer from './pages/Transfer';
+import { doLogout, Profile } from './services/Web3Service';
 
 function Router() {
   type Props = {
@@ -11,6 +13,17 @@ function Router() {
     const isAuth = localStorage.getItem("account") !== null;
     return isAuth ? children : <Navigate to="/" />
   }
+  function ManagerRoute({ children }: Props) {
+    const isAuth = localStorage.getItem("account") !== null;
+    const isManager = parseInt(localStorage.getItem("profile") || "0") === Profile.MANAGER;
+    if (isAuth && isManager) {
+      return children;
+    }
+    else {
+      doLogout();
+      <Navigate to="/" />
+    }
+  }
 
   return (
     <BrowserRouter>
@@ -19,6 +32,11 @@ function Router() {
         <Route path='/topics' element={
           <PrivateRoute>
             <Topics />
+          </PrivateRoute>
+        } />
+        <Route path='/transfer' element={
+          <PrivateRoute>
+            <Transfer />
           </PrivateRoute>
         } />
       </Routes>
