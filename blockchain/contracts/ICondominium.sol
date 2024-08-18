@@ -37,4 +37,18 @@ interface ICondominium {
     ) external returns (Lib.TransferReceipt memory);
     function getManager() external view returns (address);
     function getQuota() external view returns (uint);
+    function getResident(
+        address resident
+    ) external view returns (Lib.Resident memory);
+    function getResidents(
+        uint page,
+        uint pageSize
+    ) external view returns (Lib.ResidentPage memory);
+    function getTopic(
+        string memory title
+    ) external view returns (Lib.Topic memory);
+    function getTopics(
+        uint page,
+        uint pageSize
+    ) external view returns (Lib.TopicPage memory);
 }

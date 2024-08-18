@@ -8,11 +8,13 @@ contract Condominium is ICondominium {
     address public manager; //Ownable
     uint public monthlyQuota = 0.01 ether;
     mapping(uint16 => bool) public residences;
-    mapping(address => uint16) public residents;
-    mapping(address => bool) public counselors;
-    mapping(bytes32 => Lib.Topic) public topics;
+    Lib.Resident[] public residents;
+    mapping(address => uint) private _residentIndex;
+    address[] public counselors;
+    Lib.Topic[] public topics;
+    mapping(bytes32 => uint) private _topicIndex;
     mapping(bytes32 => Lib.Vote[]) public votings;
-    mapping(uint16 => uint) public payments;
+    mapping(uint16 => uint) public nextPayment;
 
     constructor() {
         manager = tx.origin;
@@ -35,23 +37,24 @@ contract Condominium is ICondominium {
 
     modifier onlyCounselors() {
         require(
-            tx.origin == manager || counselors[tx.origin],
+            tx.origin == manager || _IsCounselor(tx.origin),
             "Only the manager or the counselors can do this"
         );
         _;
     }
 
     modifier onlyResidents() {
-        require(
-            tx.origin == manager || isResident(tx.origin),
-            "Only the manager or the residents can do this"
-        );
-        require(
-            tx.origin == manager ||
-                block.timestamp <
-                payments[residents[tx.origin]] + (30 * 24 * 60 * 60),
-            "The resident must be defaulter"
-        );
+        if (tx.origin != manager) {
+            require(
+                isResident(tx.origin),
+                "Only the manager or the residents can do this"
+            );
+            Lib.Resident memory resident = _getResident(tx.origin);
+            require(
+                block.timestamp <= nextPayment[resident.residence],
+                "The resident must be defaulter"
+            );
+        }
         _;
     }
 
@@ -65,7 +68,7 @@ contract Condominium is ICondominium {
     }
 
     function isResident(address resident) public view returns (bool) {
-        return (residents[resident] > 0);
+        return (_getResident(resident).residence > 0);
     }
 
     function addResident(
@@ -73,26 +76,98 @@ contract Condominium is ICondominium {
         uint16 residenceId
     ) external onlyCounselors validAddress(resident) {
         require(residenceExists(residenceId), "This residence does not exists");
-        residents[resident] = residenceId;
+        residents.push(
+            Lib.Resident({
+                wallet: resident,
+                residence: residenceId,
+                isCounselor: false,
+                isManager: resident == manager
+            })
+        );
+        _residentIndex[resident] = (residents.length - 1);
     }
 
     function removeResident(
         address resident
     ) external onlyManager validAddress(resident) {
-        require(!counselors[resident], "A counceler cannot be removed");
-        delete residents[resident];
+        require(!_IsCounselor(resident), "A counselor cannot be removed");
+        uint index = _residentIndex[resident];
+        if (index != residents.length - 1) {
+            Lib.Resident memory latest = residents[residents.length - 1];
+            residents[index] = latest;
+        }
+        residents.pop();
+        delete _residentIndex[resident];
     }
 
-    function setCouncelor(
+    function getResident(
+        address resident
+    ) external view returns (Lib.Resident memory) {
+        return _getResident(resident);
+    }
+
+    function getResidents(
+        uint page,
+        uint pageSize
+    ) external view returns (Lib.ResidentPage memory) {
+        Lib.Resident[] memory result = new Lib.Resident[](pageSize);
+        uint skip = (page - 1) * pageSize;
+        uint index = 0;
+        for (
+            uint256 i = 0;
+            i < (skip + pageSize) && i < residents.length;
+            i++
+        ) {
+            result[index++] = residents[i];
+        }
+        return Lib.ResidentPage({residents: result, total: residents.length});
+    }
+
+    function _addCounselor(
+        address counselor
+    ) private onlyManager validAddress(counselor) {
+        require(isResident(counselor), "The counselor must be a resident");
+        counselors.push(counselor);
+        residents[_residentIndex[counselor]].isCounselor = true;
+    }
+
+    function _removeCounselor(
+        address counselor
+    ) private onlyManager validAddress(counselor) {
+        uint index = 1000000;
+        for (uint256 i = 0; i < counselors.length; i++) {
+            if (counselors[i] == counselor) {
+                index = i;
+                break;
+            }
+        }
+
+        require(index != 1000000, "Counselor not found");
+
+        if (index != counselors.length - 1) {
+            address latest = counselors[counselors.length - 1];
+            counselors[index] = latest;
+        }
+        counselors.pop();
+        delete residents[_residentIndex[counselor]].isCounselor = false;
+    }
+
+    function setCounselor(
         address resident,
         bool isEntering
     ) external onlyManager validAddress(resident) {
         if (isEntering) {
-            require(isResident(resident), "The councelor must be a resident");
-            counselors[resident] = true;
+            _addCounselor(resident);
         } else {
-            delete counselors[resident];
+            _removeCounselor(resident);
         }
+    }
+
+    function _IsCounselor(address resident) private view returns (bool) {
+        for (uint256 i = 0; i < counselors.length; i++) {
+            if (counselors[i] == resident) return true;
+        }
+        return false;
     }
 
     function getTopic(
@@ -339,6 +414,7 @@ contract Condominium is ICondominium {
                 topic: title
             });
     }
+
     function getManager() external view returns (address) {
         return manager;
     }
@@ -346,4 +422,26 @@ contract Condominium is ICondominium {
     function getQuota() external view returns (uint) {
         return monthlyQuota;
     }
+
+    function _getResident(
+        address resident
+    ) private view returns (Lib.Resident memory) {
+        uint index = _residentIndex[resident];
+        if (index < residents.length) {
+            Lib.Resident memory result = residents[index];
+            if (result.wallet == resident) return result;
+        }
+        return
+            Lib.Resident({
+                wallet: address(0),
+                residence: 0,
+                isCounselor: false,
+                isManager: false
+            });
+    }
+
+    function getTopics(
+        uint page,
+        uint pageSize
+    ) external view returns (Lib.TopicPage memory) {}
 }
