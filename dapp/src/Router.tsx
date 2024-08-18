@@ -3,6 +3,7 @@ import Login from './pages/Login';
 import Topics from './pages/Topics';
 import Transfer from './pages/Transfer';
 import { doLogout, Profile } from './services/Web3Service';
+import Settings from './pages/Settings';
 
 function Router() {
   type Props = {
@@ -61,6 +62,11 @@ function Router() {
         <Route path='/transfer' element={
           <ManagerRoute>
             <Transfer />
+          </ManagerRoute>
+        } />
+        <Route path='/settings' element={
+          <ManagerRoute>
+            <Settings />
           </ManagerRoute>
         } />
       </Routes>

@@ -22,6 +22,10 @@ export type Resident = {
   nextPayment: number;
 }
 
+function getProfile(): Profile {
+  return parseInt(localStorage.getItem("profile") || "0");
+}
+
 function getProvider(): ethers.BrowserProvider {
   if (!window.ethereum) throw new Error("No MetaMask found");
   return new ethers.BrowserProvider(window.ethereum);
@@ -30,6 +34,13 @@ function getProvider(): ethers.BrowserProvider {
 function getContract(provider?: ethers.BrowserProvider): ethers.Contract {
   if (!provider) provider = getProvider();
   return new ethers.Contract(ADAPTER_ADDRESS, ABI as ethers.InterfaceAbi, provider)
+}
+
+async function getContractSigner(provider?: ethers.BrowserProvider): Promise<ethers.Contract> {
+  if (!provider) provider = getProvider();
+  const signer = await provider.getSigner(localStorage.getItem("account") || undefined);
+  const contract = new ethers.Contract(ADAPTER_ADDRESS, ABI as ethers.InterfaceAbi, provider);
+  return contract.connect(signer) as ethers.Contract;
 }
 
 export async function doLogin(): Promise<LoginResult> {
@@ -65,4 +76,15 @@ export async function doLogin(): Promise<LoginResult> {
 export function doLogout() {
   localStorage.removeItem("profile");
   localStorage.removeItem("account");
+}
+
+export function getAddress(): Promise<string> {
+  const contract = getContract();
+  return contract.getImplementationAddress();
+}
+
+export async function upgrade(address: string): Promise<ethers.Transaction> {
+  if (getProfile() !== Profile.MANAGER) throw new Error("You do not have permission.")
+  const contract = await getContractSigner();
+  return contract.upgrade(address) as Promise<ethers.Transaction>;
 }
