@@ -88,3 +88,13 @@ export async function upgrade(address: string): Promise<ethers.Transaction> {
   const contract = await getContractSigner();
   return contract.upgrade(address) as Promise<ethers.Transaction>;
 }
+
+export async function addResident(wallet: string, residenceId: number): Promise<ethers.Transaction> {
+  if (getProfile() === Profile.RESIDENT) throw new Error("You do not have permission.")
+  const contract = await getContractSigner();
+  return contract.addResident(wallet, residenceId) as Promise<ethers.Transaction>;
+}
+
+export function isManager(): boolean {
+  return getProfile() === Profile.MANAGER;
+}
