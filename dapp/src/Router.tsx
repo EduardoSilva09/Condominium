@@ -24,6 +24,30 @@ function Router() {
       <Navigate to="/" />
     }
   }
+  function CouncilRoute({ children }: Props) {
+    const isAuth = localStorage.getItem("account") !== null;
+    const isCounselor = parseInt(localStorage.getItem("profile") || "0") === Profile.COUNSELOR;
+
+    if (isAuth && isCounselor) {
+      return children;
+    }
+    else {
+      doLogout();
+      <Navigate to="/" />
+    }
+  }
+  function ResidentRoute({ children }: Props) {
+    const isAuth = localStorage.getItem("account") !== null;
+    const isResident = parseInt(localStorage.getItem("profile") || "0") === Profile.RESIDENT;
+
+    if (isAuth && isResident) {
+      return children;
+    }
+    else {
+      doLogout();
+      <Navigate to="/" />
+    }
+  }
 
   return (
     <BrowserRouter>
@@ -35,9 +59,9 @@ function Router() {
           </PrivateRoute>
         } />
         <Route path='/transfer' element={
-          <PrivateRoute>
+          <ManagerRoute>
             <Transfer />
-          </PrivateRoute>
+          </ManagerRoute>
         } />
       </Routes>
     </BrowserRouter>
