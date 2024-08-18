@@ -121,10 +121,10 @@ describe("Condominium", function () {
       .to.be.revertedWith("Invalid address");
   });
 
-  it("Should set councelor ", async function () {
+  it("Should set counselor ", async function () {
     const { contract, manager, resident, accounts } = await loadFixture(deployFixture);
     await contract.addResident(resident.address, 2102);
-    await contract.setCouncelor(resident.address, true);
+    await contract.setCounselor(resident.address, true);
 
     const instance = contract.connect(resident);
     await instance.addResident(accounts[2].address, 2102);
@@ -133,42 +133,42 @@ describe("Condominium", function () {
     expect(await contract.isResident(accounts[2].address)).to.equal(true);
   });
 
-  it("Should NOT set councelor (address)", async function () {
+  it("Should NOT set counselor (address)", async function () {
     const { contract, manager, resident } = await loadFixture(deployFixture);
-    await expect(contract.setCouncelor(ethers.ZeroAddress, true))
+    await expect(contract.setCounselor(ethers.ZeroAddress, true))
       .to.be.revertedWith("Invalid address");
   });
 
-  it("Should remove councelor ", async function () {
+  it("Should remove counselor ", async function () {
     const { contract, manager, resident, accounts } = await loadFixture(deployFixture);
     await contract.addResident(resident.address, 2102);
-    await contract.setCouncelor(resident.address, true);
-    await contract.setCouncelor(resident.address, false);
+    await contract.setCounselor(resident.address, true);
+    await contract.setCounselor(resident.address, false);
 
     expect(await contract.counselors(resident.address)).to.equal(false);
   });
 
-  it("Should NOT set councelor (permission)", async function () {
+  it("Should NOT set counselor (permission)", async function () {
     const { contract, manager, resident } = await loadFixture(deployFixture);
     await contract.addResident(resident.address, 2102);
     const instance = contract.connect(resident);
 
-    await expect(instance.setCouncelor(resident.address, true))
+    await expect(instance.setCounselor(resident.address, true))
       .to.be.revertedWith("Only the manager can do this");
     expect(await contract.counselors(resident.address)).to.equal(false);
   });
 
-  it("Should NOT set councelor (external resident)", async function () {
+  it("Should NOT set counselor (external resident)", async function () {
     const { contract, manager, resident } = await loadFixture(deployFixture);
-    await expect(contract.setCouncelor(resident.address, true))
-      .to.be.revertedWith("The councelor must be a resident");
+    await expect(contract.setCounselor(resident.address, true))
+      .to.be.revertedWith("The counselor must be a resident");
     expect(await contract.counselors(resident.address)).to.equal(false);
   });
 
-  it("Should NOT remove residet (councelor) ", async function () {
+  it("Should NOT remove residet (counselor) ", async function () {
     const { contract, manager, resident } = await loadFixture(deployFixture);
     await contract.addResident(resident.address, 2102);
-    await contract.setCouncelor(resident.address, true);
+    await contract.setCounselor(resident.address, true);
 
     await expect(contract.removeResident(resident.address))
       .to.be.revertedWith("A counceler cannot be removed");

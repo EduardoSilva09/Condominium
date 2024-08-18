@@ -6,7 +6,7 @@ import {CondominiumLib as Lib} from "./CondominiumLib.sol";
 interface ICondominium {
     function addResident(address resident, uint16 residenceId) external;
     function removeResident(address resident) external;
-    function setCouncelor(address resident, bool isEntering) external;
+    function setCounselor(address resident, bool isEntering) external;
     function addTopic(
         string memory title,
         string memory description,
@@ -51,4 +51,7 @@ interface ICondominium {
         uint page,
         uint pageSize
     ) external view returns (Lib.TopicPage memory);
+    function getVotes(
+        string memory topicTitle
+    ) external view returns (Lib.Vote[] memory);
 }

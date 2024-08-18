@@ -132,7 +132,7 @@ describe("CondominiumAdapter", function () {
 
     await adapter.upgrade(await contract.getAddress());
     await adapter.addResident(accounts[1].address, 1301);
-    await adapter.setCouncelor(accounts[1].address, true)
+    await adapter.setCounselor(accounts[1].address, true)
 
     expect(await contract.counselors(accounts[1].address)).to.equal(true);
   });
@@ -140,7 +140,7 @@ describe("CondominiumAdapter", function () {
   it("Should NOT set counselor (upgrade) ", async function () {
     const { adapter, accounts, manager } = await loadFixture(deployAdapterFixture);
 
-    await expect(adapter.setCouncelor(accounts[1].address, true))
+    await expect(adapter.setCounselor(accounts[1].address, true))
       .to.be.revertedWith("You must upgrade first");
   });
 

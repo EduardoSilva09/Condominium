@@ -49,8 +49,8 @@ contract CondominiumAdapter {
         return implementation.removeResident(resident);
     }
 
-    function setCouncelor(address resident, bool isEntering) external upgraded {
-        return implementation.setCouncelor(resident, isEntering);
+    function setCounselor(address resident, bool isEntering) external upgraded {
+        return implementation.setCounselor(resident, isEntering);
     }
 
     function addTopic(
@@ -143,15 +143,23 @@ contract CondominiumAdapter {
     ) external view upgraded returns (Lib.ResidentPage memory) {
         return implementation.getResidents(page, pageSize);
     }
+
     function getTopic(
         string memory title
     ) external view upgraded returns (Lib.Topic memory) {
         return implementation.getTopic(title);
     }
+
     function getTopics(
         uint page,
         uint pageSize
     ) external view upgraded returns (Lib.TopicPage memory) {
         return implementation.getTopics(page, pageSize);
+    }
+
+    function getVotes(
+        string memory topicTitle
+    ) external view upgraded returns (Lib.Vote[] memory) {
+        return implementation.getVotes(topicTitle);
     }
 }
