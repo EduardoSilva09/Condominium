@@ -21,7 +21,7 @@ function Router() {
     }
     else {
       doLogout();
-      <Navigate to="/" />
+      return <Navigate to="/" />
     }
   }
   function CouncilRoute({ children }: Props) {
@@ -33,7 +33,7 @@ function Router() {
     }
     else {
       doLogout();
-      <Navigate to="/" />
+      return <Navigate to="/" />
     }
   }
   function ResidentRoute({ children }: Props) {
@@ -45,7 +45,7 @@ function Router() {
     }
     else {
       doLogout();
-      <Navigate to="/" />
+      return <Navigate to="/" />
     }
   }
 

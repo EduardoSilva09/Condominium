@@ -1,10 +1,14 @@
 import React from 'react';
+import Sidebar from '../components/Sidebar';
 
 function Topics() {
   return (
-    <div className="text-center">
-      hello topics
-    </div>
+    <>
+      <Sidebar />
+      <div className="text-center">
+        hello topics
+      </div>
+    </>
   )
 }
 
