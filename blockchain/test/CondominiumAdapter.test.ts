@@ -55,18 +55,21 @@ describe("CondominiumAdapter", function () {
   }
 
   async function addResidents(adapter: CondominiumAdapter, count: number, accounts: SignerWithAddress[]) {
+    const skip = count < 20 ? 0 : 1;
     for (let i = 1; i <= count; i++) {
       const residenceId = getResidenceId(i);
-      await adapter.addResident(accounts[i - 1].address, residenceId);
-      const instance = adapter.connect(accounts[i - 1]);
+      await adapter.addResident(accounts[i - skip].address, residenceId);
+
+      const instance = adapter.connect(accounts[i - skip]);
       await instance.payQuota(residenceId, { value: ethers.parseEther("0.01") });
     }
   }
 
   async function addVotes(adapter: CondominiumAdapter, count: number, accounts: SignerWithAddress[], shouldApprove: boolean = true) {
     const option: Options = shouldApprove ? Options.YES : Options.NO;
+    const skip = count < 20 ? 0 : 1;
     for (let i = 1; i <= count; i++) {
-      const instance = adapter.connect(accounts[i - 1])
+      const instance = adapter.connect(accounts[i - skip]);
       await instance.vote("topic", option);
     }
   }
@@ -133,8 +136,9 @@ describe("CondominiumAdapter", function () {
     await adapter.upgrade(await contract.getAddress());
     await adapter.addResident(accounts[1].address, 1301);
     await adapter.setCounselor(accounts[1].address, true)
+    const resident = await adapter.getResident(accounts[1].address);
 
-    expect(await contract.counselors(accounts[1].address)).to.equal(true);
+    expect(resident.isCounselor).to.equal(true);
   });
 
   it("Should NOT set counselor (upgrade) ", async function () {
@@ -274,7 +278,7 @@ describe("CondominiumAdapter", function () {
     expect(topic.status).to.equal(Status.DENIED);
   });
 
-  it("Should close voting (CHANGE_MANAGER)", async function () {
+  it("Should close voting (CHANGE_MANAGER, resident)", async function () {
     const { adapter, accounts, manager } = await loadFixture(deployAdapterFixture);
     const { contract } = await loadFixture(deployImplementationFixture);
 
@@ -287,6 +291,22 @@ describe("CondominiumAdapter", function () {
     await expect(adapter.closeVoting("topic"))
       .to.emit(adapter, "ManagerChanged")
       .withArgs(accounts[1].address);
+  });
+
+  it("Should close voting (CHANGE_MANAGER)", async function () {
+    const { adapter, accounts, manager } = await loadFixture(deployAdapterFixture);
+    const { contract } = await loadFixture(deployImplementationFixture);
+
+    await adapter.upgrade(await contract.getAddress());
+    await addResidents(adapter, 15, accounts);
+    const externalManager = accounts[19].address;
+
+    await adapter.addTopic("topic", "description topic teste", Category.CHANGE_MANAGER, 0, externalManager)
+    await adapter.openVoting("topic");
+    await addVotes(adapter, 15, accounts);
+    await expect(adapter.closeVoting("topic"))
+      .to.emit(adapter, "ManagerChanged")
+      .withArgs(externalManager);
   });
 
   it("Should close voting (CHANGE_QUOTA)", async function () {
@@ -357,5 +377,101 @@ describe("CondominiumAdapter", function () {
       .to.be.revertedWith("You must upgrade first");
   });
 
+  it("Should get residents ", async function () {
+    const { adapter, accounts, manager } = await loadFixture(deployAdapterFixture);
+    const { contract } = await loadFixture(deployImplementationFixture);
+
+    const address = await contract.getAddress();
+    await adapter.upgrade(address);
+
+    await adapter.addResident(accounts[1].address, 1301);
+
+    const result = await adapter.getResidents(1, 10);
+
+    expect(result.residents[0].wallet).to.equal(accounts[1].address);
+  });
+
+  it("Should NOT get residents (upgrade)", async function () {
+    const { adapter, accounts, manager } = await loadFixture(deployAdapterFixture);
+    await expect(adapter.getResidents(1, 10))
+      .to.be.revertedWith("You must upgrade first");
+  });
+
+  it("Should get topic", async function () {
+    const { adapter, accounts, manager } = await loadFixture(deployAdapterFixture);
+    const { contract } = await loadFixture(deployImplementationFixture);
+
+    const address = await contract.getAddress();
+    await adapter.upgrade(address);
+
+    await adapter.addTopic("topic 1", "description 1", Category.DECISION, 0, manager.address);
+
+    const topic = await adapter.getTopic("topic 1");
+
+    expect(topic.title).to.equal("topic 1");
+  });
+
+  it("Should NOT get topic (upgrade)", async function () {
+    const { adapter, accounts, manager } = await loadFixture(deployAdapterFixture);
+
+    await expect(adapter.getTopic("topic 1"))
+      .to.be.revertedWith("You must upgrade first");
+  });
+
+  it("Should get topics", async function () {
+    const { adapter, accounts, manager } = await loadFixture(deployAdapterFixture);
+    const { contract } = await loadFixture(deployImplementationFixture);
+
+    const address = await contract.getAddress();
+    await adapter.upgrade(address);
+
+    await adapter.addTopic("topic 1", "description 1", Category.DECISION, 0, manager.address);
+
+    const result = await adapter.getTopics(1, 10);
+
+    expect(result.topics[0].title).to.equal("topic 1");
+  });
+
+  it("Should get topics (empty)", async function () {
+    const { adapter, accounts, manager } = await loadFixture(deployAdapterFixture);
+    const { contract } = await loadFixture(deployImplementationFixture);
+
+    const address = await contract.getAddress();
+    await adapter.upgrade(address);
+    const result = await adapter.getTopics(1, 10);
+
+    expect(result.topics.length).to.equal(10);
+  });
+
+  it("Should NOT get topics (upgrade)", async function () {
+    const { adapter, accounts, manager } = await loadFixture(deployAdapterFixture);
+    await expect(adapter.getTopics(1, 10))
+      .to.be.revertedWith("You must upgrade first");
+  });
+
+  it("Should get votes", async function () {
+    const { adapter, accounts, manager } = await loadFixture(deployAdapterFixture);
+    const { contract } = await loadFixture(deployImplementationFixture);
+
+    const address = await contract.getAddress();
+    await adapter.upgrade(address);
+
+    await addResidents(adapter, 2, accounts);
+    await adapter.addTopic("topic 1", "description 1", Category.DECISION, 0, manager.address);
+    await adapter.openVoting("topic 1");
+
+    const instance = adapter.connect(accounts[1]);
+    await instance.vote("topic 1", Options.YES);
+    const votes = await adapter.getVotes("topic 1");
+
+    expect(votes.length).to.equal(await contract.numberOfVotes("topic 1"));
+  });
+
+  it("Should NOT get votes (upgrade)", async function () {
+    const { adapter, accounts, manager } = await loadFixture(deployAdapterFixture);
+
+    await expect(adapter.getVotes("topic 1"))
+      .to.be.revertedWith("You must upgrade first");
+  });
 
 });

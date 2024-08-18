@@ -7,7 +7,7 @@
     "test": "test"
   },
   "scripts": {
-    "test": "npx hardhat compile && npx hardhat coverage",
+    "test": "npx hardhat compile && npx hardhat test",
     "start": "npx hardhat node",
     "deploy:local": "npx hardhat run scripts/Deploy.ts --network local",
     "deploy:bsctest": "npx hardhat run scripts/Deploy.ts --network bsctest",
