@@ -21,6 +21,10 @@ export type Resident = {
   residence: number;
   nextPayment: number;
 }
+export type ResidentPage = {
+  residents: Resident[];
+  total: number;
+}
 
 function getProfile(): Profile {
   return parseInt(localStorage.getItem("profile") || "0");
@@ -97,4 +101,19 @@ export async function addResident(wallet: string, residenceId: number): Promise<
 
 export function isManager(): boolean {
   return getProfile() === Profile.MANAGER;
+}
+
+export async function getResidents(page: number = 1, pageSize: number = 10): Promise<ResidentPage> {
+  const contract = getContract();
+  const result = await contract.getResidents(page, pageSize) as ResidentPage;
+  const residents = result.residents
+    .filter(r => r.residence).sort((a, b) => {
+      if (a.residence > b.residence) return 1;
+      return -1;
+    })
+
+  return {
+    residents,
+    total: result.total
+  } as ResidentPage;
 }
