@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar"
 import { getAddress, upgrade } from "../services/Web3Service";
 import Footer from "../components/Footer";
+import Loader from "../components/Loader";
 
 function Settings() {
   const [contract, setContract] = useState<string>("");
@@ -45,14 +46,7 @@ function Settings() {
                 </div>
                 <div className="card-body px-0 pb-2">
                   {
-                    isLoading ? (
-                      <div className="row ms-3">
-                        <div className="col-md-6 mb-3">
-                          <i className="material-icons opacity-10 me-2">hourglass_empty</i>
-                          Loading...
-                        </div>
-                      </div>
-                    ) : <></>
+                    isLoading ? <Loader /> : <></>
                   }
                   <div className="row ms-3">
                     <div className="col-md-6 mb-3">
