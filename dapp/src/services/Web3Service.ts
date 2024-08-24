@@ -117,3 +117,9 @@ export async function getResidents(page: number = 1, pageSize: number = 10): Pro
     total: result.total
   } as ResidentPage;
 }
+
+export async function removeResidents(wallet: string): Promise<ethers.Transaction> {
+  if (getProfile() !== Profile.MANAGER) throw new Error("You do not have permission.")
+  const contract = await getContractSigner();
+  return contract.removeResident(wallet) as Promise<ethers.Transaction>;
+}

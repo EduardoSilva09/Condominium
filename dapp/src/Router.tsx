@@ -4,6 +4,8 @@ import Topics from './pages/Topics';
 import Transfer from './pages/Transfer';
 import { doLogout, Profile } from './services/Web3Service';
 import Settings from './pages/Settings';
+import Residents from './pages/residents';
+import ResidentPage from './pages/residents/ResidentPage';
 
 function Router() {
   type Props = {
@@ -27,7 +29,7 @@ function Router() {
   }
   function CouncilRoute({ children }: Props) {
     const isAuth = localStorage.getItem("account") !== null;
-    const isCounselor = parseInt(localStorage.getItem("profile") || "0") === Profile.COUNSELOR;
+    const isCounselor = parseInt(localStorage.getItem("profile") || "0") !== Profile.RESIDENT;
 
     if (isAuth && isCounselor) {
       return children;
@@ -68,6 +70,16 @@ function Router() {
           <ManagerRoute>
             <Settings />
           </ManagerRoute>
+        } />
+        <Route path='/residents/new' element={
+          <CouncilRoute>
+            <ResidentPage />
+          </CouncilRoute>
+        } />
+        <Route path='/residents' element={
+          <CouncilRoute>
+            <Residents />
+          </CouncilRoute>
         } />
       </Routes>
     </BrowserRouter>
