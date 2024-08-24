@@ -21,6 +21,7 @@ export type Resident = {
   residence: number;
   nextPayment: number;
 }
+
 export type ResidentPage = {
   residents: Resident[];
   total: number;
@@ -102,6 +103,14 @@ export async function addResident(wallet: string, residenceId: number): Promise<
 export function isManager(): boolean {
   return getProfile() === Profile.MANAGER;
 }
+export function isResident(): boolean {
+  return getProfile() === Profile.RESIDENT;
+}
+
+export async function getResident(wallet: string): Promise<Resident> {
+  const contract = getContract();
+  return contract.getResident(wallet) as Promise<Resident>;
+}
 
 export async function getResidents(page: number = 1, pageSize: number = 10): Promise<ResidentPage> {
   const contract = getContract();
@@ -122,4 +131,10 @@ export async function removeResidents(wallet: string): Promise<ethers.Transactio
   if (getProfile() !== Profile.MANAGER) throw new Error("You do not have permission.")
   const contract = await getContractSigner();
   return contract.removeResident(wallet) as Promise<ethers.Transaction>;
+}
+
+export async function setCounselor(wallet: string, isEntering: boolean): Promise<ethers.Transaction> {
+  if (getProfile() !== Profile.MANAGER) throw new Error("You do not have permission.")
+  const contract = await getContractSigner();
+  return contract.setCounselor(wallet, isEntering) as Promise<ethers.Transaction>;
 }

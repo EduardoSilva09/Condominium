@@ -71,6 +71,11 @@ function Router() {
             <Settings />
           </ManagerRoute>
         } />
+        <Route path='/residents/edit/:wallet' element={
+          <ManagerRoute>
+            <ResidentPage />
+          </ManagerRoute>
+        } />
         <Route path='/residents/new' element={
           <CouncilRoute>
             <ResidentPage />
