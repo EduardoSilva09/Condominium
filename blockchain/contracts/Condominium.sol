@@ -135,15 +135,16 @@ contract Condominium is ICondominium {
         uint pageSize
     ) external view returns (Lib.ResidentPage memory) {
         Lib.Resident[] memory result = new Lib.Resident[](pageSize);
-        uint skip = (page - 1) * pageSize;
+        uint skip = ((page - 1) * pageSize);
         uint index = 0;
         for (
-            uint256 i = 0;
+            uint i = skip;
             i < (skip + pageSize) && i < residents.length;
             i++
         ) {
             result[index++] = _getResident(residents[i].wallet);
         }
+
         return Lib.ResidentPage({residents: result, total: residents.length});
     }
 

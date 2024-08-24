@@ -6,12 +6,15 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { getResidents, removeResidents, Resident } from "../../services/Web3Service";
 import ResidentRow from "../../components/ResidentRow";
 import Loader from "../../components/Loader";
+import Pagination from "../../components/Pagination";
+import { ethers } from "ethers";
 
 function Residents() {
   const [residents, setResidents] = useState<Resident[]>();
   const [message, setMessage] = useState<string>("");
   const [error, setError] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [count, setCount] = useState<ethers.BigNumberish>(0);
   const navigate = useNavigate();
 
   function useQuery() {
@@ -21,9 +24,15 @@ function Residents() {
 
   useEffect(() => {
     setIsLoading(true);
-    getResidents()
+    const queryPage = parseInt(query.get("page") || "1");
+    console.log('page', queryPage);
+
+    getResidents(queryPage)
       .then(result => {
+        console.log(result);
+
         setResidents(result.residents);
+        setCount(result.total)
         setIsLoading(false);
       })
       .catch(err => {
@@ -102,8 +111,9 @@ function Residents() {
                         }
                       </tbody>
                     </table>
+                    <Pagination count={count} pageSize={10} />
                   </div>
-                  <div className="row ms-3">
+                  <div className="row ms-2">
                     <div className="col-md-12 mb-3">
                       <a className="btn bg-gradient-dark me-2" href="/residents/new">
                         <i className="material-icons opacity-10 me-2">add</i>

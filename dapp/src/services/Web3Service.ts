@@ -24,7 +24,7 @@ export type Resident = {
 
 export type ResidentPage = {
   residents: Resident[];
-  total: number;
+  total: ethers.BigNumberish;
 }
 
 function getProfile(): Profile {
