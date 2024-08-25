@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "npx nodemon ./src/sever.ts --watch './src/ -e ts'",
+    "dev": "npx nodemon ./src/server.ts --watch './src/' -e ts",
     "compile": "npx tsc",
     "start": "node ./dist/server.ts"
   },
