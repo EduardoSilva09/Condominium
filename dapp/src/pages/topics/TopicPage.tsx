@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import Footer from "../../components/Footer";
 import Sidebar from "../../components/Sidebar";
-import { getTopic, Topic, Status, Category, addTopic, editTopic } from "../../services/Web3Service";
+import { getTopic, Topic, Status, Category, addTopic, editTopic, isManager } from "../../services/Web3Service";
 import { useNavigate, useParams } from "react-router-dom";
 import Loader from "../../components/Loader";
 import { ethers } from "ethers";
@@ -41,7 +41,7 @@ function TopicPage() {
 
   function btnSaveClick() {
     if (topic) {
-      setMessage("Connecting to title...wait...");
+      setMessage("Connecting to wallet...wait...");
       if (!title) {
         addTopic(topic)
           .then(tx => navigate(`/topics?tx=${tx.hash}`))
@@ -76,6 +76,10 @@ function TopicPage() {
   function isClosed(): boolean {
     const status = parseInt(`${topic.status || 0}`);
     return [Status.APPROVED, Status.DENIED, Status.DELETED, Status.SPENT].includes(status);
+  }
+
+  function isDisabled() {
+    return !!title && (topic.status !== Status.IDLE || !isManager());
   }
 
   function showResponsible(): boolean {
@@ -135,7 +139,7 @@ function TopicPage() {
                             value={topic.description || ""}
                             placeholder="..."
                             onChange={onTopicChange}
-                            disabled={!!title && topic.status !== Status.IDLE}></input>
+                            disabled={isDisabled()}></input>
                         </div>
                       </div>
                     </div>
@@ -179,7 +183,7 @@ function TopicPage() {
                                 value={topic.responsible || ""}
                                 placeholder="0x00..."
                                 onChange={onTopicChange}
-                                disabled={!!title && topic.status !== Status.IDLE}
+                                disabled={isDisabled()}
                               ></input>
                             </div>
                           </div>
@@ -198,7 +202,7 @@ function TopicPage() {
                                 value={getAmount()}
                                 placeholder="0"
                                 onChange={onTopicChange}
-                                disabled={!!title && topic.status !== Status.IDLE}
+                                disabled={isDisabled()}
                               ></input>
                             </div>
                           </div>
@@ -257,15 +261,22 @@ function TopicPage() {
                       </div>
                     ) : <></>
                   }
-                  <div className="row ms-3">
-                    <div className="col-md-12 mb-3">
-                      <button className="btn bg-gradient-dark me-2" onClick={btnSaveClick}>
-                        <i className="material-icons opacity-10 me-2">save</i>
-                        Save Topic
-                      </button>
-                      <span className="text-danger">{message}</span>
-                    </div>
-                  </div>
+                  {
+                    !title || (isManager() && topic.status === Status.IDLE) ?
+                      (
+                        <div className="row ms-3">
+                          <div className="col-md-12 mb-3">
+                            <button className="btn bg-gradient-dark me-2" onClick={btnSaveClick}>
+                              <i className="material-icons opacity-10 me-2">save</i>
+                              Save Topic
+                            </button>
+                            <span className="text-danger">{message}</span>
+                          </div>
+                        </div>
+                      )
+                      : <></>
+                  }
+
                 </div>
               </div>
             </div>

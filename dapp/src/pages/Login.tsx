@@ -6,6 +6,7 @@ function Login() {
   const navigate = useNavigate();
   const [message, setMessage] = useState<string>("")
   function btnLoginClick() {
+    setMessage("Logging in...")
     doLogin()
       .then(result => { navigate('/topics') })
       .catch(err => setMessage(err.message))
