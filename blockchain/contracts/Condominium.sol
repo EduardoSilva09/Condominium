@@ -95,6 +95,8 @@ contract Condominium is ICondominium {
     ) external onlyManager validAddress(resident) {
         require(!_IsCounselor(resident), "A counselor cannot be removed");
         uint index = _residentIndex[resident];
+        if (index == 0) require(residents[index].wallet = resident, "The resident does not exists");
+
         if (index != residents.length - 1) {
             Lib.Resident memory latest = residents[residents.length - 1];
             residents[index] = latest;

@@ -10,6 +10,7 @@ export default (req: Request, res: Response, next: NextFunction) => {
       const decoded = jwt.verify(token, JWT_SECRET)
       if (decoded) {
         res.locals.token = decoded;
+        return next();
       }
       console.error(`Token decoded error.`);
     } catch (error) {

@@ -8,6 +8,7 @@ import ResidentRow from "../../components/ResidentRow";
 import Loader from "../../components/Loader";
 import Pagination from "../../components/Pagination";
 import { ethers } from "ethers";
+import { deleteApiResident } from "../../services/APIService";
 
 function Residents() {
   const [residents, setResidents] = useState<Resident[]>();
@@ -45,9 +46,11 @@ function Residents() {
     setIsLoading(true);
     setMessage('');
     setError('');
-    removeResidents(wallet)
-      .then(tx => {
-        navigate(`/residents?tx=${tx.hash}`);
+    const promiseOnChain = removeResidents(wallet);
+    const promiseOffChain = deleteApiResident(wallet);
+    Promise.all([promiseOnChain, promiseOffChain])
+      .then(results => {
+        navigate(`/residents?tx=${results[0].hash}`);
         setIsLoading(false);
       })
       .catch(err => {
