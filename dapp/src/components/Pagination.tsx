@@ -24,7 +24,6 @@ function Pagination(props: Props) {
 
   function getBottom() {
     const count = ethers.toNumber(props.count);
-    console.log(count);
 
     if (count > 0) {
       return (<div className="fw-normal small mt-4 mt-lg-0"><b>{count}</b> result(s).</div>)

@@ -25,12 +25,8 @@ function Residents() {
   useEffect(() => {
     setIsLoading(true);
     const queryPage = parseInt(query.get("page") || "1");
-    console.log('page', queryPage);
-
     getResidents(queryPage)
       .then(result => {
-        console.log(result);
-
         setResidents(result.residents);
         setCount(result.total)
         setIsLoading(false);
