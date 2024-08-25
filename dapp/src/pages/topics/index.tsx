@@ -8,6 +8,7 @@ import { getTopics, removeTopic, Topic } from "../../services/Web3Service";
 import Loader from "../../components/Loader";
 import Pagination from "../../components/Pagination";
 import { ethers } from "ethers";
+import TopicRow from "./TopicRow";
 
 function Topics() {
   const [topics, setTopics] = useState<Topic[]>();
@@ -96,15 +97,16 @@ function Topics() {
                         </tr>
                       </thead>
                       <tbody>
-                        {/* {
-                          Topics && Topics.length
-                            ? Topics.map(Topic =>
+                        {
+                          topics && topics.length
+                            ? topics.map(topic =>
                               <TopicRow
-                                key={Topic.wallet}
-                                data={Topic}
-                                onDelete={() => { onDeleteTopic(Topic.wallet) }} />)
+                                key={topic.title}
+                                data={topic}
+                                onDelete={() => onDeleteTopic(topic.title)} />
+                            )
                             : <></>
-                        } */}
+                        }
                       </tbody>
                     </table>
                     <Pagination count={count} pageSize={10} />

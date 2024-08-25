@@ -1,5 +1,3 @@
-import { ethers } from "ethers";
-
 type Props = {
   value: number | string;
   onChange: Function;
