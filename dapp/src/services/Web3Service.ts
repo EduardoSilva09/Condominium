@@ -94,6 +94,7 @@ export async function doLogin(): Promise<LoginResult> {
 export function doLogout() {
   localStorage.removeItem("profile");
   localStorage.removeItem("account");
+  localStorage.removeItem("token");
 }
 
 export function getAddress(): Promise<string> {
