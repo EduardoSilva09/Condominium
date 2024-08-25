@@ -29,6 +29,39 @@ export type ResidentPage = {
   total: ethers.BigNumberish;
 }
 
+export enum Category {
+  DECISION = 0,
+  SPENT = 1,
+  CHANGE_QUOTA = 2,
+  CHANGE_MANAGER = 3
+}
+
+export enum Status {
+  IDLE = 0,
+  VOTING = 1,
+  APPROVED = 2,
+  DENIED = 3,
+  DELETED = 4,
+  SPENT = 5
+}
+
+export type Topic = {
+  title: string;
+  description: string;
+  category: Category;
+  amount: ethers.BigNumberish;
+  responsible: string;
+  status?: Status;
+  createdDate?: ethers.BigNumberish;
+  startDate?: ethers.BigNumberish;
+  endDate?: ethers.BigNumberish;
+}
+
+export type TopicPage = {
+  topics: Topic[];
+  total: ethers.BigNumberish;
+}
+
 function getProfile(): Profile {
   return parseInt(localStorage.getItem("profile") || "0");
 }
@@ -129,7 +162,7 @@ export async function getResident(wallet: string): Promise<Resident> {
 export async function getResidents(page: number = 1, pageSize: number = 10): Promise<ResidentPage> {
   const contract = getContract();
   const result = await contract.getResidents(page, pageSize) as ResidentPage;
-  const residents = result.residents
+  const residents = [...result.residents]
     .filter(r => r.residence).sort((a, b) => {
       if (a.residence > b.residence) return 1;
       return -1;
@@ -151,4 +184,54 @@ export async function setCounselor(wallet: string, isEntering: boolean): Promise
   if (getProfile() !== Profile.MANAGER) throw new Error("You do not have permission.")
   const contract = await getContractSigner();
   return contract.setCounselor(wallet, isEntering) as Promise<ethers.Transaction>;
+}
+
+export async function getTopic(title: string): Promise<Topic> {
+  const contract = getContract();
+  return contract.getTopic(title) as Promise<Topic>;
+}
+
+export async function getTopics(page: number = 1, pageSize: number = 10): Promise<TopicPage> {
+  const contract = getContract();
+  const result = await contract.getTopics(page, pageSize) as TopicPage;
+  const topics = result.topics.filter(t => t.title);
+
+  return {
+    topics,
+    total: result.total
+  } as TopicPage;
+}
+
+export async function removeTopic(title: string): Promise<ethers.Transaction> {
+  if (getProfile() !== Profile.MANAGER) throw new Error(`You do not have permission.`);
+  const contract = await getContractSigner();
+  return contract.removeTopic(title) as Promise<ethers.Transaction>;
+}
+
+export async function addTopic(topic: Topic): Promise<ethers.Transaction> {
+  const contract = await getContractSigner();
+  topic.amount = ethers.toBigInt(topic.amount || 0);
+  return contract.addTopic(
+    topic.title,
+    topic.description,
+    topic.category,
+    topic.amount,
+    topic.responsible
+  ) as Promise<ethers.Transaction>;
+}
+
+export async function editTopic(
+  topicToEdit: string,
+  description: string,
+  amount: ethers.BigNumberish,
+  responsible: string
+): Promise<ethers.Transaction> {
+  if (getProfile() !== Profile.MANAGER) throw new Error(`You do not have permission.`);
+  const contract = await getContractSigner();
+  amount = ethers.toBigInt(amount || 0);
+  return contract.editTopic(
+    topicToEdit,
+    description,
+    amount,
+    responsible) as Promise<ethers.Transaction>;
 }

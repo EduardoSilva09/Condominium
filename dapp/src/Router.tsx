@@ -1,11 +1,12 @@
 import { Route, BrowserRouter, Routes, Navigate } from 'react-router-dom'
 import Login from './pages/Login';
-import Topics from './pages/Topics';
+import Topics from './pages/topics';
 import Transfer from './pages/Transfer';
 import { doLogout, Profile } from './services/Web3Service';
 import Settings from './pages/Settings';
 import Residents from './pages/residents';
 import ResidentPage from './pages/residents/ResidentPage';
+import TopicPage from './pages/topics/TopicPage';
 
 function Router() {
   type Props = {
@@ -56,6 +57,16 @@ function Router() {
     <BrowserRouter>
       <Routes>
         <Route path='/' element={<Login />} />
+        <Route path='/topics/edit/:title' element={
+          <CouncilRoute>
+            <TopicPage />
+          </CouncilRoute>
+        } />
+        <Route path='/topics/new' element={
+          <PrivateRoute>
+            <TopicPage />
+          </PrivateRoute>
+        } />
         <Route path='/topics' element={
           <PrivateRoute>
             <Topics />
