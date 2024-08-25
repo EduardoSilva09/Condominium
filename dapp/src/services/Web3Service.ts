@@ -1,5 +1,6 @@
 import { ethers } from "ethers";
 import ABI from './ABI.json';
+import { doApiLogin } from "./APIService";
 
 const ADAPTER_ADDRESS = `${process.env.REACT_APP_ADAPTER_ADDRESS}`;
 
@@ -10,8 +11,9 @@ export enum Profile {
 }
 
 export type LoginResult = {
+  token: string;
   account: string;
-  profile: Profile
+  profile: Profile;
 }
 
 export type Resident = {
@@ -72,7 +74,18 @@ export async function doLogin(): Promise<LoginResult> {
     throw new Error("Unauthorized");
 
   localStorage.setItem("account", account);
+
+  // Retrieve the signer object from the provider
+  const signer = await provider.getSigner();
+  const timestamp = Date.now();
+  const message = `Authentication to condominium. Timestamp: ${timestamp}`;
+  // Sign the message using the signer's private key and store the signed message (secret)
+  const secret = await signer.signMessage(message);
+  const token = await doApiLogin(account, secret, timestamp);
+  localStorage.setItem("token", token);
+
   return {
+    token,
     account,
     profile: parseInt(localStorage.getItem("profile") || "0")
   } as LoginResult;
