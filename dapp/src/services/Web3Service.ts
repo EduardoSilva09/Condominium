@@ -235,3 +235,11 @@ export async function editTopic(
     amount,
     responsible) as Promise<ethers.Transaction>;
 }
+
+export function hasCounselorPermissions(): boolean {
+  return getProfile() !== Profile.RESIDENT;
+}
+
+export function hasResidentPermissions(): boolean {
+  return getProfile() === Profile.RESIDENT;
+}

@@ -3,6 +3,7 @@ import morgan from 'morgan';
 import "express-async-errors";
 import cors from 'cors'
 import helmet from 'helmet';
+import multer from 'multer';
 import errorMiddleware from './middlewares/errorMiddleware';
 import residentRouter from './routers/residentRouter'
 import authController from './controller/authController'
@@ -22,5 +23,7 @@ app.use('/', (req: Request, res: Response, next: NextFunction) => {
   res.send('Health Check');
 });
 
+const uploadMiddleware = multer({ dest: "files" })
+app.use('/topicfiles/', authenticationMiddleware, uploadMiddleware.single("file"),)
 app.use(errorMiddleware)
 export default app;
