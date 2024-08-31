@@ -8,13 +8,13 @@ export default (req: Request, res: Response, next: NextFunction) => {
   const queryToken = req.query.token as string;
   if (token || queryToken) {
     try {
-      const decoded = jwt.verify(token || queryToken, JWT_SECRET)
+      const decoded = jwt.verify(token || queryToken, JWT_SECRET);
       if (decoded) {
         res.locals.token = decoded;
         return next();
       }
-      console.error(`Token decoded error.`);
-    } catch (error) {
+      console.error(`Token decode error.`);
+    } catch (error: any) {
       console.error(error);
     }
   } else {

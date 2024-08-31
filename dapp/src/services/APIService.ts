@@ -43,10 +43,15 @@ export async function uploadTopicFile(topicTitle: string, file: File): Promise<v
   const hash = keccak256(toUtf8Bytes(topicTitle));
   const formData = new FormData();
   formData.append("file", file);
-  const res = await axios.post(`${API_URL}/topicfiles/${hash}`, formData, {
+  await axios.post(`${API_URL}/topicfiles/${hash}`, formData, {
     headers: {
       "Content-Type": "multipart/form-data"
     }
   });
-  console.log(res)
+}
+
+export async function getTopicFiles(topicTitle: string): Promise<string[]> {
+  const hash = keccak256(toUtf8Bytes(topicTitle));
+  const response = await axios.get(`${API_URL}/topicfiles/${hash}`);
+  return response.data as string[];
 }

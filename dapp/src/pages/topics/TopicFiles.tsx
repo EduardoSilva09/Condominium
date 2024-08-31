@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Status } from "../../services/Web3Service";
 import Loader from "../../components/Loader";
 import TopicFileRow from "./TopicFileRow";
-import { uploadTopicFile } from "../../services/APIService";
+import { getTopicFiles, uploadTopicFile } from "../../services/APIService";
 
 type Props = {
   title: string;
@@ -26,7 +26,16 @@ function TopicFiles(props: Props) {
   }
 
   function loadFiles() {
-
+    setIsLoading(true);
+    getTopicFiles(props.title)
+      .then(files => {
+        setFiles(files)
+        setIsLoading(false);
+      }).catch(err => {
+        setUploadMessage(err.response ? err.response : err.message)
+        setFiles([])
+        setIsLoading(false);
+      });
   }
 
   useEffect(() => {
