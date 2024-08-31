@@ -7,6 +7,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import Loader from "../../components/Loader";
 import { ethers } from "ethers";
 import TopicCategory from "../../components/TopicCategory";
+import TopicFiles from "./TopicFiles";
 
 function TopicPage() {
 
@@ -281,6 +282,9 @@ function TopicPage() {
               </div>
             </div>
           </div>
+          {
+            title ? <TopicFiles title={title} status={topic.status} /> : <></>
+          }
           <Footer />
         </div>
       </main >
