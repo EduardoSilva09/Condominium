@@ -239,7 +239,3 @@ export async function editTopic(
 export function hasCounselorPermissions(): boolean {
   return getProfile() !== Profile.RESIDENT;
 }
-
-export function hasResidentPermissions(): boolean {
-  return getProfile() === Profile.RESIDENT;
-}

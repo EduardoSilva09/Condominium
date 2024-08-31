@@ -4,7 +4,7 @@ import path from "path";
 import { keccak256, toUtf8Bytes } from 'ethers/lib/utils';
 
 function checkTitleOrHash(hashOrTitle: string): string {
-  if (hashOrTitle) throw new Error(`The hash or title is required.`)
+  if (!hashOrTitle) throw new Error(`The hash or title is required.`)
   const regex = /^[a-f0-9]{64}$/gi;
   if (!regex.test(hashOrTitle)) return keccak256(toUtf8Bytes(hashOrTitle))
   return hashOrTitle;
@@ -36,7 +36,7 @@ export async function addTopicFile(req: Request, res: Response, next: NextFuncti
   const folder = path.resolve(__dirname, "..", "..", "files");
   const oldPath = path.join(folder, file.filename);
   const newFolder = path.join(folder, hash);
-  if (fs.existsSync(newFolder)) fs.mkdirSync(newFolder);
+  if (!fs.existsSync(newFolder)) fs.mkdirSync(newFolder);
 
   const newPath = path.join(newFolder, file.originalname);
   fs.renameSync(oldPath, newPath);

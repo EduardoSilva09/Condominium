@@ -23,7 +23,7 @@ function TopicPage() {
       getTopic(title)
         .then(topic => {
           const { title, description, category, amount, responsible, status, createdDate, startDate, endDate } = topic;
-          setTopic({ title, description, category, amount, responsible, status, createdDate, startDate, endDate })
+          setTopic({ title, description, category, amount, responsible, status: parseInt(`${status}`), createdDate, startDate, endDate })
           setIsLoading(false);
         })
         .catch(err => {

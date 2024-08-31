@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Status } from "../../services/Web3Service";
 import Loader from "../../components/Loader";
 import TopicFileRow from "./TopicFileRow";
+import { uploadTopicFile } from "../../services/APIService";
 
 type Props = {
   title: string;
@@ -12,6 +13,7 @@ function TopicFiles(props: Props) {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [files, setFiles] = useState<string[]>([]);
   const [newFile, setNewFile] = useState<File>();
+  const [uploadMessage, setUploadMessage] = useState<string>("");
 
   function onDeleteTopicFile(filename: string) {
     alert(filename);
@@ -21,6 +23,31 @@ function TopicFiles(props: Props) {
     if (evt.target.files) {
       setNewFile(evt.target.files[0])
     }
+  }
+
+  function loadFiles() {
+
+  }
+
+  useEffect(() => {
+    loadFiles()
+  }, []);
+
+  function btnUploadClick() {
+    if (!newFile) return;
+    setIsLoading(true);
+    setUploadMessage("Uploading the file... Wait...");
+    uploadTopicFile(props.title, newFile)
+      .then(() => {
+        setNewFile(undefined)
+        setUploadMessage("");
+        setIsLoading(false);
+        loadFiles();
+      })
+      .catch(err => {
+        setUploadMessage(err.response ? err.response : err.message)
+        setIsLoading(false);
+      });
   }
 
   return (
@@ -78,14 +105,21 @@ function TopicFiles(props: Props) {
               {
                 props.status === Status.IDLE
                   ? (
-                    <div className="row mb-3">
+                    <div className="row mb-3 ms-3">
                       <div className="col-md-6 mb-3">
                         <div className="form-group">
                           <h6>Upload a new file:</h6>
                           <div className="input-group input-group-outline">
                             <input className="form-control" type="file" id="newFile" onChange={onFileChange}></input>
+                            <button className="btn bg-gradient-dark mb-0" onClick={btnUploadClick}>
+                              <i className="material-icons opacity-10 me-2">cloud_upload</i>
+                              Upload
+                            </button>
                           </div>
                         </div>
+                      </div>
+                      <div className="col-md-6 mt-5 text-danger">
+                        {uploadMessage}
                       </div>
                     </div>
                   )
