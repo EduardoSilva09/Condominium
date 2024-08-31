@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import Footer from "../../components/Footer";
 import Sidebar from "../../components/Sidebar";
-import { getTopic, Topic, Status, Category, addTopic, editTopic, isManager } from "../../services/Web3Service";
+import { getTopic, Topic, Status, Category, addTopic, editTopic, isManager, openVoting, closeVoting } from "../../services/Web3Service";
 import { useNavigate, useParams } from "react-router-dom";
 import Loader from "../../components/Loader";
 import { ethers } from "ethers";
@@ -95,6 +95,28 @@ function TopicPage() {
 
   function getAmount(): string {
     return topic.amount ? topic.amount.toString() : "0";
+  }
+
+  function btnOpenVoteClick() {
+    if (topic && title) {
+      setMessage("Connecting to Metamask... Wait...")
+      openVoting(title)
+        .then(tx => { navigate(`/topics?tx=${tx.hash}`) })
+        .catch(err => {
+          setMessage(err.message)
+        })
+    }
+  }
+
+  function btnCloseVoteClick() {
+    if (topic && title) {
+      setMessage("Connecting to Metamask... Wait...")
+      closeVoting(title)
+        .then(tx => { navigate(`/topics?tx=${tx.hash}`) })
+        .catch(err => {
+          setMessage(err.message)
+        })
+    }
   }
 
   return (
@@ -262,21 +284,40 @@ function TopicPage() {
                       </div>
                     ) : <></>
                   }
-                  {
-                    !title || (isManager() && topic.status === Status.IDLE) ?
-                      (
-                        <div className="row ms-3">
-                          <div className="col-md-12 mb-3">
+
+                  <div className="row ms-3">
+                    <div className="col-md-12 mb-3">
+                      {
+                        !title || (isManager() && topic.status === Status.IDLE) ?
+                          (
                             <button className="btn bg-gradient-dark me-2" onClick={btnSaveClick}>
                               <i className="material-icons opacity-10 me-2">save</i>
                               Save Topic
-                            </button>
-                            <span className="text-danger">{message}</span>
-                          </div>
-                        </div>
-                      )
-                      : <></>
-                  }
+                            </button>)
+                          : <></>
+                      }
+                      {
+                        (isManager() && topic.status === Status.IDLE) ?
+                          (
+                            <button className="btn btn-success me-2" onClick={btnOpenVoteClick}>
+                              <i className="material-icons opacity-10 me-2">lock_open</i>
+                              Open Voting
+                            </button>)
+                          : <></>
+                      }
+                      {
+                        (isManager() && topic.status === Status.VOTING) ?
+                          (
+                            <button className="btn btn-danger me-2" onClick={btnCloseVoteClick}>
+                              <i className="material-icons opacity-10 me-2">lock</i>
+                              Close Voting
+                            </button>)
+                          : <></>
+                      }
+                      <span className="text-danger">{message}</span>
+                    </div>
+                  </div>
+
 
                 </div>
               </div>

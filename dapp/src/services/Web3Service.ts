@@ -239,3 +239,15 @@ export async function editTopic(
 export function hasCounselorPermissions(): boolean {
   return getProfile() !== Profile.RESIDENT;
 }
+
+export async function openVoting(topicTitle: string): Promise<ethers.Transaction> {
+  if (!isManager()) throw new Error(`You do not have permission.`);
+  const contract = await getContractSigner();
+  return contract.openVoting(topicTitle) as Promise<ethers.Transaction>;
+}
+
+export async function closeVoting(topicTitle: string): Promise<ethers.Transaction> {
+  if (!isManager()) throw new Error(`You do not have permission.`);
+  const contract = await getContractSigner();
+  return contract.closeVoting(topicTitle) as Promise<ethers.Transaction>;
+}

@@ -36,7 +36,7 @@ function TopicRow(props: Props) {
 
   function getStatus() {
     let text = "", className = "";
-    switch (props.data.status) {
+    switch (parseInt(`${props.data.status}`)) {
       case Status.APPROVED: {
         text = "Approved";
         className = "badge bg-success py-1 ms-3";
