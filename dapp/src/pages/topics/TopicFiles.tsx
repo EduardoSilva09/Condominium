@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Status } from "../../services/Web3Service";
 import Loader from "../../components/Loader";
 import TopicFileRow from "./TopicFileRow";
-import { getTopicFiles, uploadTopicFile } from "../../services/APIService";
+import { deleteTopicFile, getTopicFiles, uploadTopicFile } from "../../services/APIService";
 
 type Props = {
   title: string;
@@ -16,7 +16,20 @@ function TopicFiles(props: Props) {
   const [uploadMessage, setUploadMessage] = useState<string>("");
 
   function onDeleteTopicFile(filename: string) {
-    alert(filename);
+    if (props.status !== Status.IDLE)
+      return setUploadMessage("You cannot delete this file.");
+
+    setIsLoading(true);
+    setUploadMessage("Deleting the file... Wait...");
+    deleteTopicFile(props.title, filename)
+      .then(() => {
+        setIsLoading(false);
+        setUploadMessage("");
+        loadFiles()
+      }).catch(err => {
+        setUploadMessage(err.response ? err.response : err.message)
+        setIsLoading(false);
+      });
   }
 
   function onFileChange(evt: React.ChangeEvent<HTMLInputElement>) {
