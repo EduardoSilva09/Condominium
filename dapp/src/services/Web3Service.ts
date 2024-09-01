@@ -287,3 +287,9 @@ export async function vote(topic: string, option: Options): Promise<ethers.Trans
   const contract = await getContractSigner();
   return contract.vote(topic, option) as Promise<ethers.Transaction>;
 }
+
+export async function transfer(topic: string, amount: ethers.BigNumberish): Promise<ethers.Transaction> {
+  if (!isManager()) throw new Error(`You do not have permission.`);
+  const contract = await getContractSigner();
+  return contract.transfer(topic, amount) as Promise<ethers.Transaction>;
+}

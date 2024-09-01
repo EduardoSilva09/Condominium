@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import Footer from "../../components/Footer";
 import Sidebar from "../../components/Sidebar";
-import { getTopic, Topic, Status, Vote, Category, addTopic, editTopic, isManager, openVoting, closeVoting, getVotes, vote, Options } from "../../services/Web3Service";
+import { getTopic, Topic, Status, Vote, Category, addTopic, editTopic, isManager, openVoting, closeVoting, getVotes, vote, Options, transfer } from "../../services/Web3Service";
 import { useNavigate, useParams } from "react-router-dom";
 import Loader from "../../components/Loader";
 import { ethers } from "ethers";
@@ -145,6 +145,19 @@ function TopicPage() {
 
       if (window.confirm(`Are you sure to vote as ${text}?`)) {
         vote(title, option)
+          .then(tx => navigate("/topics?tx=" + tx.hash))
+          .catch(err => setMessage(err.message));
+      }
+      else
+        setMessage("");
+    }
+  }
+
+  function btnTransferClick() {
+    setMessage("Connecting to MetaMask...wait...");
+    if (topic && topic.status === Status.APPROVED && title) {
+      if (window.confirm(`Are you sure to transfer ETH ${ethers.formatEther(topic.amount)} for ${topic.responsible}?`)) {
+        transfer(title, topic.amount)
           .then(tx => navigate("/topics?tx=" + tx.hash))
           .catch(err => setMessage(err.message));
       }
@@ -390,6 +403,16 @@ function TopicPage() {
                             <button className="btn btn-danger me-2" onClick={() => btnVoteClick(Options.NO)}>
                               <i className="material-icons opacity-10 me-2">thumb_down</i>
                               Vote Yes
+                            </button>
+                          )
+                          : <></>
+                      }
+                      {
+                        isManager() && topic.status === Status.APPROVED && topic.category === Category.SPENT
+                          ? (
+                            <button className="btn bg-gradient-dark me-2" onClick={btnTransferClick}>
+                              <i className="material-icons opacity-10 me-2">payments</i>
+                              Transfer Payment
                             </button>
                           )
                           : <></>
