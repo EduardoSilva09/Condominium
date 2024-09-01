@@ -95,7 +95,11 @@ contract Condominium is ICondominium {
     ) external onlyManager validAddress(resident) {
         require(!_IsCounselor(resident), "A counselor cannot be removed");
         uint index = _residentIndex[resident];
-        if (index == 0) require(residents[index].wallet = resident, "The resident does not exists");
+        if (index == 0)
+            require(
+                residents[index].wallet = resident,
+                "The resident does not exists"
+            );
 
         if (index != residents.length - 1) {
             Lib.Resident memory latest = residents[residents.length - 1];
@@ -371,7 +375,13 @@ contract Condominium is ICondominium {
             topic.status == Lib.Status.VOTING,
             "Only VOTING topics can be voted"
         );
-        uint16 residence = residents[_residentIndex[tx.origin]].residence;
+        uint index = _residentIndex[tx.origin];
+        require(
+            index > 0 || residents[0].wallet == tx.origin,
+            "Resident not found"
+        );
+
+        uint16 residence = residents[index].residence;
         bytes32 topicId = keccak256(bytes(title));
         Lib.Vote[] memory votes = _votings[topicId];
         for (uint8 i = 0; i < votes.length; i++) {
