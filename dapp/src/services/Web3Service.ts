@@ -293,3 +293,10 @@ export async function transfer(topic: string, amount: ethers.BigNumberish): Prom
   const contract = await getContractSigner();
   return contract.transfer(topic, amount) as Promise<ethers.Transaction>;
 }
+
+export async function getBalance(address?: string): Promise<string> {
+  if (!address) address = await getAddress();
+  const provider = getProvider();
+  const balance = await provider.getBalance(address);
+  return ethers.formatEther(balance);
+}

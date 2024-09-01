@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar"
-import { getAddress, upgrade } from "../services/Web3Service";
+import { getAddress, getBalance, upgrade } from "../services/Web3Service";
 import Footer from "../components/Footer";
 import Loader from "../components/Loader";
 
@@ -8,15 +8,21 @@ function Settings() {
   const [contract, setContract] = useState<string>("");
   const [message, setMessage] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [balance, setBalance] = useState<string>("");
+
   useEffect(() => {
     setIsLoading(true);
     getAddress()
       .then(address => {
-        setContract(address)
+        setContract(address);
+        return getBalance();
+      })
+      .then(balance => {
+        setBalance(balance);
         setIsLoading(false);
       })
       .catch(err => {
-        setMessage(err.message)
+        setMessage(err.message);
         setIsLoading(false);
       });
   }, [])
@@ -48,6 +54,16 @@ function Settings() {
                   {
                     isLoading ? <Loader /> : <></>
                   }
+                  <div className="row ms-3">
+                    <div className="col-md-6 mb-3">
+                      <div className="form-group">
+                        <label htmlFor="balance">Condominium Balance (ETH):</label>
+                        <div className="input-group input-group-outline">
+                          <input className="form-control" type="number" id="balance" value={balance} disabled={true}></input>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                   <div className="row ms-3">
                     <div className="col-md-6 mb-3">
                       <div className="form-group">
