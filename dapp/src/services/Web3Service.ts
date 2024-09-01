@@ -62,6 +62,20 @@ export type TopicPage = {
   total: ethers.BigNumberish;
 }
 
+export enum Options {
+  EMPTY = 0,
+  YES = 1,
+  NO = 2,
+  ABSTENTION = 3
+}
+
+export type Vote = {
+  resident: string;
+  residence: number;
+  timestamp: number;
+  option: Options;
+}
+
 function getProfile(): Profile {
   return parseInt(localStorage.getItem("profile") || "0");
 }
@@ -262,4 +276,14 @@ export async function getQuota(): Promise<ethers.BigNumberish> {
   const contract = getContract();
   const quota = await contract.getQuota();
   return ethers.toBigInt(quota);
+}
+
+export async function getVotes(topic: string): Promise<Vote[]> {
+  const contract = getContract();
+  return contract.getVotes(topic) as Promise<Vote[]>;
+}
+
+export async function vote(topic: string, option: Options): Promise<ethers.Transaction> {
+  const contract = await getContractSigner();
+  return contract.vote(topic, option) as Promise<ethers.Transaction>;
 }

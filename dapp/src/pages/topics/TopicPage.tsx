@@ -1,8 +1,7 @@
-
 import { useEffect, useState } from "react";
 import Footer from "../../components/Footer";
 import Sidebar from "../../components/Sidebar";
-import { getTopic, Topic, Status, Category, addTopic, editTopic, isManager, openVoting, closeVoting } from "../../services/Web3Service";
+import { getTopic, Topic, Status, Vote, Category, addTopic, editTopic, isManager, openVoting, closeVoting, getVotes, vote, Options } from "../../services/Web3Service";
 import { useNavigate, useParams } from "react-router-dom";
 import Loader from "../../components/Loader";
 import { ethers } from "ethers";
@@ -15,6 +14,7 @@ function TopicPage() {
   const [message, setMessage] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [topic, setTopic] = useState<Topic>({} as Topic);
+  const [votes, setVotes] = useState<Vote[]>([]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -24,6 +24,12 @@ function TopicPage() {
         .then(topic => {
           const { title, description, category, amount, responsible, status, createdDate, startDate, endDate } = topic;
           setTopic({ title, description, category, amount, responsible, status: parseInt(`${status}`), createdDate, startDate, endDate })
+          if (topic.status === Status.VOTING)
+            return getVotes(topic.title);
+          else
+            setIsLoading(false);
+        }).then(votes => {
+          setVotes(votes || []);
           setIsLoading(false);
         })
         .catch(err => {
@@ -116,6 +122,34 @@ function TopicPage() {
         .catch(err => {
           setMessage(err.message)
         })
+    }
+  }
+
+  function showVoting(): boolean {
+    return ![Status.DELETED, Status.IDLE].includes(topic.status || Status.DELETED) && votes && votes.length > 0;
+  }
+
+  function alreadyVoted(): boolean {
+    return !!(votes && votes.length && votes.find(v => v.resident.toUpperCase() === (localStorage.getItem("account") || "").toUpperCase()));
+  }
+
+  function btnVoteClick(option: Options) {
+    setMessage("Connecting to MetaMask...wait...");
+    if (topic && topic.status === Status.VOTING && title) {
+      let text = "";
+      switch (option) {
+        case Options.YES: text = "YES"; break;
+        case Options.NO: text = "NO"; break;
+        default: text = "ABSTENTION";
+      }
+
+      if (window.confirm(`Are you sure to vote as ${text}?`)) {
+        vote(title, option)
+          .then(tx => navigate("/topics?tx=" + tx.hash))
+          .catch(err => setMessage(err.message));
+      }
+      else
+        setMessage("");
     }
   }
 
@@ -284,7 +318,23 @@ function TopicPage() {
                       </div>
                     ) : <></>
                   }
-
+                  {
+                    showVoting() ? (
+                      <div className="row ms-3">
+                        <div className="col-md-6 mb-3">
+                          <div className="form-group">
+                            <label htmlFor="voting">Voting:</label>
+                            <div className="input-group input-group-outline">
+                              <input className="form-control" type="text" id="voting"
+                                value={`${votes.length} votes (${votes.filter(v => v.option === Options.YES).length} YES)`}
+                                disabled={true}
+                              ></input>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ) : <></>
+                  }
                   <div className="row ms-3">
                     <div className="col-md-12 mb-3">
                       {
@@ -314,11 +364,39 @@ function TopicPage() {
                             </button>)
                           : <></>
                       }
+                      {
+                        !isManager() && topic.status === Status.VOTING && !alreadyVoted()
+                          ? (
+                            <button className="btn btn-success me-2" onClick={() => btnVoteClick(Options.YES)}>
+                              <i className="material-icons opacity-10 me-2">thumb_up</i>
+                              Vote Yes
+                            </button>
+                          )
+                          : <></>
+                      }
+                      {
+                        !isManager() && topic.status === Status.VOTING && !alreadyVoted()
+                          ? (
+                            <button className="btn btn-warning me-2" onClick={() => btnVoteClick(Options.ABSTENTION)}>
+                              <i className="material-icons opacity-10 me-2">thumbs_up_down</i>
+                              Don't Vote
+                            </button>
+                          )
+                          : <></>
+                      }
+                      {
+                        !isManager() && topic.status === Status.VOTING && !alreadyVoted()
+                          ? (
+                            <button className="btn btn-danger me-2" onClick={() => btnVoteClick(Options.NO)}>
+                              <i className="material-icons opacity-10 me-2">thumb_down</i>
+                              Vote Yes
+                            </button>
+                          )
+                          : <></>
+                      }
                       <span className="text-danger">{message}</span>
                     </div>
                   </div>
-
-
                 </div>
               </div>
             </div>

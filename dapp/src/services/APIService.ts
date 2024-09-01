@@ -1,7 +1,6 @@
 import { keccak256, toUtf8Bytes } from "ethers";
 import axios from "./AxiosConfig"
 import { hasCounselorPermissions, isManager, Profile } from "./Web3Service";
-import { server } from "typescript";
 
 const API_URL = `${process.env.REACT_APP_API_URL}`
 
