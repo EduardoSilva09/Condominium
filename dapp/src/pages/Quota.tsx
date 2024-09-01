@@ -19,8 +19,6 @@ function Quota() {
       .then(result => {
         setQuota(result[0])
         setResident(result[1])
-        console.log(resident);
-
         setIsLoading(false);
       })
       .catch(err => {
@@ -100,7 +98,7 @@ function Quota() {
                       <div className="form-group">
                         <label htmlFor="residenceId">Residence (block+apt):</label>
                         <div className="input-group input-group-outline">
-                          <input className="form-control" type="number" id="residenceId" value={ethers.toNumber(resident.residence)} disabled={true}></input>
+                          <input className="form-control" type="number" id="residenceId" value={ethers.toNumber(resident.residence || 0)} disabled={true}></input>
                         </div>
                       </div>
                     </div>
