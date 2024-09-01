@@ -251,3 +251,15 @@ export async function closeVoting(topicTitle: string): Promise<ethers.Transactio
   const contract = await getContractSigner();
   return contract.closeVoting(topicTitle) as Promise<ethers.Transaction>;
 }
+
+export async function payQuota(residenceId: number, value: ethers.BigNumberish): Promise<ethers.Transaction> {
+  if (!isResident()) throw new Error(`You do not have permission.`);
+  const contract = await getContractSigner();
+  return contract.payQuota(residenceId, { value }) as Promise<ethers.Transaction>;
+}
+
+export async function getQuota(): Promise<ethers.BigNumberish> {
+  const contract = getContract();
+  const quota = await contract.getQuota();
+  return ethers.toBigInt(quota);
+}

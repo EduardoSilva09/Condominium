@@ -24,7 +24,7 @@ function Settings() {
   function btnSaveClick() {
     setMessage("Saving data...wait...");
     upgrade(contract)
-      .then(tx => setMessage("Settings saved! It may takes some minuter to have effect."))
+      .then(tx => setMessage("Settings saved! It may takes some minutes to have effect."))
       .catch(err => setMessage(err.message));
   }
 

@@ -7,6 +7,7 @@ import Settings from './pages/Settings';
 import Residents from './pages/residents';
 import ResidentPage from './pages/residents/ResidentPage';
 import TopicPage from './pages/topics/TopicPage';
+import Quota from './pages/Quota';
 
 function Router() {
   type Props = {
@@ -96,6 +97,11 @@ function Router() {
           <CouncilRoute>
             <Residents />
           </CouncilRoute>
+        } />
+        <Route path='/quota' element={
+          <ResidentRoute>
+            <Quota />
+          </ResidentRoute>
         } />
       </Routes>
     </BrowserRouter>
